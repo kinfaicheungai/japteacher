@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>日本語先生</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink:    #1a1a2e;
+  --paper:  #f7f4ee;
+  --warm:   #f0ebe0;
+  --border: #ddd8cc;
+  --accent: #c0392b;
+  --accent2: #2c7a4b;
+  --gold:   #b8860b;
+  --gold-l: #f5e6a3;
+  --muted:  #7a7570;
+  --dim:    #a09890;
+  --surface: #ffffff;
+  --shadow: 0 4px 24px rgba(26,26,46,0.10);
+  --radius: 14px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* ════ SETUP ════ */
+#setup {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--ink);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 1.5rem; overflow-y: auto;
+}
+
+.setup-wrap { width: 100%; max-width: 440px; padding-bottom: 2rem; }
+
+.setup-logo {
+  text-align: center;
+  padding: 2.5rem 0 2rem;
+}
+
+.logo-kanji {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 3.5rem;
+  color: var(--gold-l);
+  line-height: 1;
+  letter-spacing: 0.1em;
+}
+
+.logo-en {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-top: 0.5rem;
+}
+
+.setup-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.s-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 0.45rem;
+  display: block;
+}
+
+.s-row { display: flex; gap: 0.5rem; align-items: center; }
+
+.s-input {
+  flex: 1;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 0;
+}
+.s-input:focus { border-color: var(--gold-l); }
+.s-input::placeholder { color: rgba(255,255,255,0.25); font-size: 0.78rem; }
+
+.eye-btn {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: rgba(255,255,255,0.4); font-size: 1rem;
+  flex-shrink: 0; transition: color 0.15s;
+}
+.eye-btn:hover { color: white; }
+
+.s-hint {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.3);
+  margin-top: 0.3rem;
+  line-height: 1.5;
+}
+.s-hint a { color: var(--gold-l); text-decoration: none; }
+
+.s-saved { font-size: 0.7rem; color: #7fff9e; margin-top: 0.3rem; display: none; }
+
+.s-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); }
+
+.s-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.s-toggle-label { font-size: 0.88rem; color: rgba(255,255,255,0.6); }
+
+.toggle { position: relative; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.t-slider {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: 24px; cursor: pointer; transition: background 0.2s;
+}
+.t-slider:before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; left: 3px; top: 3px;
+  background: white; border-radius: 50%; transition: transform 0.2s;
+}
+.toggle input:checked + .t-slider { background: var(--gold); }
+.toggle input:checked + .t-slider:before { transform: translateX(20px); }
+
+.btn-go {
+  width: 100%; padding: 1rem;
+  background: var(--gold-l); color: var(--ink);
+  border: none; border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem; font-weight: 500; cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-go:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-go:active { transform: translateY(0); }
+
+/* ════ APP ════ */
+#app { display: none; flex-direction: column; height: 100dvh; }
+#app.active { display: flex; }
+
+/* Header */
+.app-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.7rem 1.1rem;
+  padding-top: max(0.7rem, env(safe-area-inset-top));
+  background: var(--ink);
+  flex-shrink: 0;
+}
+
+.app-bar-logo {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 1.2rem;
+  color: var(--gold-l);
+  letter-spacing: 0.08em;
+}
+
+.app-bar-right { display: flex; gap: 0.5rem; align-items: center; }
+
+.bar-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: rgba(255,255,255,0.5); font-size: 0.95rem;
+  transition: all 0.15s;
+}
+.bar-btn:hover { color: white; border-color: rgba(255,255,255,0.3); }
+.bar-btn.on { color: var(--gold-l); border-color: rgba(248,230,163,0.4); }
+
+.level-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  background: rgba(184,134,11,0.2);
+  color: var(--gold-l);
+  border: 1px solid rgba(184,134,11,0.3);
+}
+
+/* Chat feed */
+.feed {
+  flex: 1; overflow-y: auto;
+  padding: 1rem;
+  display: flex; flex-direction: column; gap: 0.9rem;
+  overscroll-behavior: contain;
+  background: var(--warm);
+}
+.feed::-webkit-scrollbar { width: 3px; }
+.feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Message bubbles */
+.msg { display: flex; gap: 0.6rem; animation: msgIn 0.28s ease; }
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg.sensei { align-self: flex-start; max-width: 88%; }
+.msg.user   { align-self: flex-end;   max-width: 88%; flex-direction: row-reverse; }
+
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 0.9rem; flex-shrink: 0; margin-top: 2px;
+}
+.avatar.s { background: var(--ink); color: var(--gold-l); }
+.avatar.u { background: var(--accent2); color: white; font-size: 0.7rem; font-family: 'Noto Sans JP', sans-serif; }
+
+.bubble-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.bubble {
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  font-size: 0.93rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.msg.sensei .bubble {
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 4px 16px 16px 16px;
+  box-shadow: var(--shadow);
+}
+
+.msg.user .bubble {
+  background: var(--ink);
+  color: #f0ebe0;
+  border-radius: 16px 4px 16px 16px;
+}
+
+/* Correction box */
+.correction {
+  background: #fff8e6;
+  border: 1px solid #e8c84a;
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: #5a4a00;
+}
+.correction-title {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+/* Play button on bubble */
+.bubble-play {
+  align-self: flex-start;
+  background: none; border: none;
+  font-size: 0.82rem; color: var(--muted);
+  cursor: pointer; padding: 0; line-height: 1;
+  transition: color 0.15s;
+}
+.bubble-play:hover { color: var(--accent2); }
+.bubble-play.playing { color: var(--accent2); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Furigana */
+ruby rt { font-size: 0.55em; color: var(--muted); }
+
+/* Thinking */
+.thinking {
+  display: flex; gap: 4px; align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-radius: 4px 16px 16px 16px;
+  box-shadow: var(--shadow);
+}
+.t-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--muted);
+  animation: bounce 1.2s infinite;
+}
+.t-dot:nth-child(2) { animation-delay: 0.18s; }
+.t-dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes bounce {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Status bar */
+.status-bar {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; min-height: 40px;
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--dim); flex-shrink: 0; transition: background 0.2s;
+}
+.status-dot.rec  { background: #e74c3c; animation: recDot 1s infinite; }
+.status-dot.proc { background: #3498db; animation: recDot 1s infinite; }
+.status-dot.play { background: var(--accent2); animation: recDot 1s infinite; }
+@keyframes recDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.status-text { flex: 1; font-size: 0.8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Bottom controls */
+.bottom {
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0.9rem 1rem;
+  padding-bottom: max(0.9rem, var(--safe-b));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0; gap: 0.5rem;
+}
+
+.b-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-family: 'Noto Sans JP', sans-serif;
+  transition: color 0.15s; padding: 0.3rem 1rem; border-radius: 10px;
+}
+.b-btn:hover { color: var(--ink); }
+.b-btn.danger:hover { color: var(--accent); }
+.b-icon { font-size: 1.3rem; line-height: 1; }
+.b-label { font-size: 0.58rem; letter-spacing: 0.06em; }
+
+/* BIG MIC BUTTON */
+.mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+
+.mic-btn {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 3px solid var(--border);
+  background: var(--paper);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  transition: all 0.2s; position: relative;
+}
+.mic-btn:hover { border-color: var(--ink); }
+.mic-btn.recording {
+  border-color: #e74c3c;
+  background: #fff0ee;
+  animation: micPulse 1.2s infinite;
+}
+.mic-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+@keyframes micPulse {
+  0%  { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+  70% { box-shadow: 0 0 0 14px rgba(231,76,60,0); }
+  100%{ box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+}
+
+.mic-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.08em; }
+
+/* Toast */
+.toast {
+  position: fixed; top: 1rem; left: 50%;
+  transform: translateX(-50%) translateY(-60px);
+  background: var(--ink); color: #f0ebe0;
+  border-radius: 8px; padding: 0.55rem 1.1rem;
+  font-size: 0.82rem; z-index: 400;
+  transition: transform 0.25s ease; white-space: nowrap; pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.ok  { background: var(--accent2); }
+.toast.err { background: var(--accent); }
+
+/* Empty */
+.empty-feed {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex: 1; color: var(--dim); text-align: center; gap: 0.8rem; padding: 2rem;
+}
+.empty-kanji { font-family: 'Noto Serif JP', serif; font-size: 3rem; opacity: 0.2; }
+.empty-text { font-size: 0.85rem; line-height: 1.7; max-width: 260px; }
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+<div id="setup">
+<div class="setup-wrap">
+  <div class="setup-logo">
+    <div class="logo-kanji">日本語先生</div>
+    <div class="logo-en">Marugoto B1 · AI Voice Teacher</div>
+  </div>
+
+  <div class="setup-card">
+    <div>
+      <span class="s-label">OpenAI API Key（語音識別 + 老師聲音）</span>
+      <div class="s-row">
+        <input class="s-input" type="password" id="oai" placeholder="sk-..." autocomplete="off">
+        <button class="eye-btn" onclick="eye('oai',this)">👁</button>
+      </div>
+      <div class="s-hint"><a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a> 取得。Whisper語音識別 + TTS-1-HD老師聲音。</div>
+      <div class="s-saved" id="oai-ok">✓ 已記住</div>
+    </div>
+
+    <div>
+      <span class="s-label">Anthropic API Key（Claude 老師大腦）</span>
+      <div class="s-row">
+        <input class="s-input" type="password" id="ant" placeholder="sk-ant-..." autocomplete="off">
+        <button class="eye-btn" onclick="eye('ant',this)">👁</button>
+      </div>
+      <div class="s-hint">你的 Claude credit，負責教學、糾正、對話。</div>
+      <div class="s-saved" id="ant-ok">✓ 已記住</div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08)">
+
+    <div>
+      <span class="s-label" style="margin-bottom:0.8rem;display:block">你的名字（老師怎麼叫你）</span>
+      <input class="s-input" type="text" id="username" placeholder="例：ティム / Tim" style="width:100%">
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:0.7rem">
+      <div class="s-toggle-row">
+        <span class="s-toggle-label">💾 記住 Key（本機）</span>
+        <label class="toggle"><input type="checkbox" id="save-k" checked><span class="t-slider"></span></label>
+      </div>
+      <div class="s-toggle-row">
+        <span class="s-toggle-label">🔊 自動播放老師聲音</span>
+        <label class="toggle"><input type="checkbox" id="auto-play" checked><span class="t-slider"></span></label>
+      </div>
+      <div class="s-toggle-row">
+        <span class="s-toggle-label">📝 顯示文字（同時看字）</span>
+        <label class="toggle"><input type="checkbox" id="show-text" checked><span class="t-slider"></span></label>
+      </div>
+    </div>
+
+    <button class="btn-go" onclick="launch()">授業を始めましょう →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <div class="app-bar">
+    <div class="app-bar-logo">日本語先生</div>
+    <div class="app-bar-right">
+      <span class="level-badge">B1 · N3</span>
+      <button class="bar-btn on" id="btn-sound" onclick="toggleSound()" title="老師聲音">🔊</button>
+      <button class="bar-btn on" id="btn-text"  onclick="toggleText()"  title="顯示文字">📝</button>
+      <button class="bar-btn" onclick="goSetup()" title="設定">⚙️</button>
+    </div>
+  </div>
+
+  <div class="feed" id="feed">
+    <div class="empty-feed" id="empty">
+      <div class="empty-kanji">先</div>
+      <div class="empty-text">マイクボタンを押して<br>先生と話しましょう<br><br>老師會用日語帶你上課<br>你可以日語或中文回答</div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot" id="s-dot"></div>
+    <div class="status-text" id="s-txt">準備完了</div>
+  </div>
+
+  <div class="bottom">
+    <button class="b-btn danger" onclick="clearChat()">
+      <span class="b-icon">🗑</span>
+      <span class="b-label">クリア</span>
+    </button>
+
+    <div class="mic-wrap">
+      <button class="mic-btn" id="mic-btn" onclick="tapMic()">
+        <span id="mic-icon">🎙</span>
+      </button>
+      <div class="mic-label" id="mic-label">話してください</div>
+    </div>
+
+    <button class="b-btn" onclick="stopAudio()" title="停止">
+      <span class="b-icon">⏹</span>
+      <span class="b-label">停止</span>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── STATE ──
+let oaiKey='', antKey='', userName='ティム';
+let autoPlay=true, showText=true;
+let isRecording=false, isBusy=false;
+let mediaRecorder=null, audioChunks=[], mediaStream=null;
+let currentAudio=null;
+let history=[];   // [{role,content}]
+let sessionStarted=false;
+
+// ── CURRICULUM (Marugoto B1 Topic 1 & 2) ──
+const CURRICULUM = `
+【まるごと 中級1 B1 カリキュラム】
+
+■ トピック1「はじめての人と」
+Can-do:
+- PART1: まとまりのある自己紹介を聞いて理解できる
+- PART2: 知らない人に話しかけて質問したり自分のことを話したりできる（尊敬語含む）
+- PART3: プロフィール・希望・抱負を含む自己紹介ができる
+- PART4: SNSプロフィールを読んで理解できる
+- PART5: SNSの自己紹介文を書ける
+
+重要文法:
+- 尊敬語①: いらっしゃいます・なさいます・めしあがります・ごらんになります・おっしゃいます・くださいます
+- 尊敬語②: お＋Vます＋になります（例：お帰りになりますか）
+- Vはじめる: ～年前からまた習いはじめました
+- ～のは～です（強調）: 日本語の勉強を始めたのは3年前です
+- ～ようになりたい: いろいろなことが話せるようになりたい
+- ～ばと思っている / ～といいな
+
+重要語彙:
+交流会・参加者・自己紹介・職業・出身・趣味・興味・希望・抱負・ヨガ・和太鼓
+いらっしゃる・なさる・めしあがる・ごらんになる・おっしゃる・くださる
+社交的・広告代理店・定年退職・専業主婦・アマチュアオーケストラ
+
+会話例（PART2 キャシーと西山）:
+キャシー：あのう、失礼ですが…日本の方ですか？
+西山：あ、はい、そうですけど。
+キャシー：やっぱり。さっき携帯で日本語をお話しになっていたので。
+西山：日本語、できるんですか？
+キャシー：はい。どこで勉強なさっているんですか？
+西山：主婦です。去年の夏に夫が転勤になったので東京から引っ越してきたんです。
+
+■ トピック2「おすすめの料理」
+Can-do:
+- PART1: レストランの紹介を聞いて味・値段などの情報が理解できる
+- PART2: 料理の材料について話し合いながら買い物ができる
+- PART3: 自分の国の料理の特徴・作り方をわかりやすく説明できる
+- PART4: 料理のレシピを読んで材料・作り方・注意点が理解できる
+- PART5: 料理の作り方のメモを書ける
+
+重要文法:
+- ～みたいだ: うーん、ないみたいですね（推測）
+- ～でしょうか: どれがいいでしょうか（丁寧な疑問）
+- 疑問詞＋Vばいい: どうやって使えばいいんですか
+- 連用中止: じゃがいもの皮をむき、切り、ゆでる
+- Vたあと: 少し冷ましたあと、よくつぶす
+- Vておく: キャベツは千切りにしておく
+- 自動詞・他動詞: 固まる（自）/ 固める（他）
+- Vてくる: 固まってきたら裏返す
+
+重要語彙:
+新鮮・素材・雰囲気・値段・特徴・刺身・うまい・だし
+お好み焼き粉・小麦粉・かつおぶし・材料・具・調味料
+ゆでる・揚げる・蒸す・煮る・炒める・焼く・混ぜる
+`;
+
+// ── SYSTEM PROMPT ──
+function buildSystem() {
+  return `あなたは優秀な日本語の先生です。生徒の名前は「${userName}さん」です。
+
+【あなたの性格と話し方】
+- 明るく、温かく、励ましながら教える
+- 主に日本語で話す（B1レベルに合わせてゆっくり・明瞭に）
+- 難しい文法を説明するときだけ、ごく簡単な中国語（繁体字）を補足してもいい
+- 漢字には必ずふりがなをつける（例：自己紹介（じこしょうかい））
+- 返答は簡潔に（3〜5文）、必ず会話を続ける質問で終わる
+- 絵文字を適度に使って親しみやすく
+
+【授業の進め方】
+- まるごと中級1 B1の内容に沿って自然に授業を進める
+- 65%は教科書の内容（文法・語彙・会話場面）、35%は延伸・自由会話
+- 生徒が何か言ったら必ずコメントして、次の練習へつなぐ
+- トピック1（はじめての人と）→ トピック2（おすすめの料理）の順で進める
+- 生徒のレベルに合わせて難易度を調整する
+
+【生徒の発言を評価するとき】
+生徒が日本語で話したら、必ずこの形式で返す：
+
+✅ 正しかった点：（具体的に褒める）
+📝 改善ポイント：（間違いがあれば優しく直す。例：「〜と言いましたね。でも、正しくは〜です」）
+（そのあと会話を続ける）
+
+間違いがなければ📝は省略してOK。
+
+【カリキュラム内容】
+${CURRICULUM}
+
+【今日の授業開始】
+${userName}さんに日本語で温かく挨拶して、今日の授業を始めてください。
+まず自己紹介してもらい、トピック1の練習を始めましょう。`;
+}
+
+// ── SETUP ──
+window.addEventListener('DOMContentLoaded', () => {
+  const ok = localStorage.getItem('jp_oai');
+  const ak = localStorage.getItem('jp_ant');
+  const un = localStorage.getItem('jp_name');
+  if (ok) { document.getElementById('oai').value=ok; document.getElementById('oai-ok').style.display='block'; }
+  if (ak) { document.getElementById('ant').value=ak; document.getElementById('ant-ok').style.display='block'; }
+  if (un) document.getElementById('username').value = un;
+});
+
+function eye(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type==='password' ? 'text' : 'password';
+  btn.textContent = el.type==='password' ? '👁' : '🙈';
+}
+
+function launch() {
+  const ok = document.getElementById('oai').value.trim();
+  const ak = document.getElementById('ant').value.trim();
+  const un = document.getElementById('username').value.trim();
+
+  if (!ok || !ok.startsWith('sk-'))     { toast('OpenAI Key を入力してください', 'err'); return; }
+  if (!ak || !ak.startsWith('sk-ant-')) { toast('Claude Key を入力してください', 'err'); return; }
+
+  oaiKey   = ok; antKey = ak;
+  userName = un || 'ティム';
+  autoPlay = document.getElementById('auto-play').checked;
+  showText = document.getElementById('show-text').checked;
+
+  if (document.getElementById('save-k').checked) {
+    localStorage.setItem('jp_oai',  ok);
+    localStorage.setItem('jp_ant',  ak);
+    localStorage.setItem('jp_name', userName);
+  } else {
+    ['jp_oai','jp_ant','jp_name'].forEach(k=>localStorage.removeItem(k));
+  }
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  syncBtns();
+
+  // Start lesson
+  if (!sessionStarted) { sessionStarted=true; startLesson(); }
+}
+
+function goSetup() {
+  stopAudio();
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+}
+
+// ── TOGGLE ──
+function syncBtns() {
+  document.getElementById('btn-sound').className = 'bar-btn' + (autoPlay?' on':'');
+  document.getElementById('btn-text').className  = 'bar-btn' + (showText?' on':'');
+}
+function toggleSound() { autoPlay=!autoPlay; syncBtns(); toast(autoPlay?'音声：オン':'音声：オフ'); }
+function toggleText()  { showText=!showText;  syncBtns(); toast(showText?'テキスト：表示':'テキスト：非表示'); }
+
+// ── START LESSON (AI speaks first) ──
+async function startLesson() {
+  setStatus('先生が準備中…', 'proc');
+  showThinking();
+  try {
+    const reply = await claudeChat([{ role:'user', content:`授業を始めてください。私の名前は${userName}です。` }]);
+    removeThinking();
+    history.push({ role:'user', content:`授業を始めてください。私の名前は${userName}です。` });
+    history.push({ role:'assistant', content: reply });
+    addBubble('sensei', reply, true);
+    setStatus('マイクを押して話してください', '');
+  } catch(e) {
+    removeThinking(); toast(e.message,'err'); setStatus('エラー','');
+  }
+}
+
+// ── MIC ──
+function tapMic() {
+  if (isBusy) return;
+  if (isRecording) { stopRec(); }
+  else { startRec(); }
+}
+
+async function startRec() {
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch(e) { toast('マイクが使えません: '+e.message,'err'); return; }
+
+  audioChunks = [];
+  const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+    ? 'audio/webm;codecs=opus'
+    : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+
+  mediaRecorder = new MediaRecorder(mediaStream, { mimeType: mime });
+  mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
+  mediaRecorder.onstop = () => processRec(mime);
+  mediaRecorder.start(300);
+
+  isRecording = true;
+  document.getElementById('mic-btn').classList.add('recording');
+  document.getElementById('mic-icon').textContent = '⏹';
+  document.getElementById('mic-label').textContent = 'タップして停止';
+  setStatus('録音中…', 'rec');
+}
+
+function stopRec() {
+  if (!mediaRecorder || !isRecording) return;
+  isRecording = false;
+  mediaRecorder.stop();
+  mediaStream?.getTracks().forEach(t=>t.stop());
+  document.getElementById('mic-btn').classList.remove('recording');
+  document.getElementById('mic-icon').textContent = '🎙';
+  document.getElementById('mic-label').textContent = '話してください';
+}
+
+async function processRec(mime) {
+  if (audioChunks.length === 0) return;
+  isBusy = true;
+  document.getElementById('mic-btn').classList.add('disabled');
+  setStatus('認識中…', 'proc');
+
+  const blob = new Blob(audioChunks, { type: mime });
+  if (blob.size < 1500) { isBusy=false; document.getElementById('mic-btn').classList.remove('disabled'); setStatus('短すぎます。もう一度どうぞ',''); return; }
+
+  try {
+    // 1. Whisper
+    const userText = await whisper(blob, mime);
+    if (!userText || userText.trim().length < 1) {
+      isBusy=false; document.getElementById('mic-btn').classList.remove('disabled');
+      setStatus('聞き取れませんでした',''); return;
+    }
+
+    // Show user bubble
+    addBubble('user', userText, false);
+    history.push({ role:'user', content: userText });
+
+    // 2. Claude
+    setStatus('先生が考え中…', 'proc');
+    showThinking();
+    const reply = await claudeChat(history);
+    removeThinking();
+    history.push({ role:'assistant', content: reply });
+
+    // Show + speak
+    addBubble('sensei', reply, true);
+    setStatus('マイクを押して話してください', '');
+
+  } catch(e) {
+    removeThinking();
+    toast(e.message, 'err');
+    setStatus('エラー: '+e.message.substring(0,40), '');
+  } finally {
+    isBusy = false;
+    document.getElementById('mic-btn').classList.remove('disabled');
+  }
+}
+
+// ── WHISPER ──
+async function whisper(blob, mime) {
+  const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+  const fd = new FormData();
+  fd.append('file', blob, `r.${ext}`);
+  fd.append('model', 'whisper-1');
+  const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method:'POST', headers:{'Authorization':`Bearer ${oaiKey}`}, body:fd
+  });
+  if (!r.ok) { const e=await r.json().catch(()=>{}); throw new Error('Whisper: '+(e?.error?.message||`HTTP ${r.status}`)); }
+  return (await r.json()).text;
+}
+
+// ── CLAUDE ──
+async function claudeChat(msgs) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': antKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 700,
+      system: buildSystem(),
+      messages: msgs.slice(-20)
+    })
+  });
+  if (!r.ok) { const e=await r.json().catch(()=>{}); throw new Error('Claude: '+(e?.error?.message||`HTTP ${r.status}`)); }
+  return (await r.json()).content?.[0]?.text || '';
+}
+
+// ── TTS (OpenAI) ──
+async function speak(text, isSensei=true) {
+  stopAudio();
+  // Clean text for TTS (remove furigana brackets, emoji, markdown)
+  const clean = text
+    .replace(/[✅📝🎌🎵😊👍🙆‍♀️]/g,'')
+    .replace(/（[ぁ-ん]+）/g,'')
+    .replace(/\*+/g,'')
+    .replace(/\n+/g,' ')
+    .trim();
+
+  if (!clean || clean.length < 2) return;
+
+  // Alternate voice: shimmer (female, main) for sensei's lesson
+  // onyx (male) for listening practice characters
+  const voice = isSensei ? 'shimmer' : 'onyx';
+
+  setStatus('先生が話しています…', 'play');
+  try {
+    const r = await fetch('https://api.openai.com/v1/audio/speech', {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${oaiKey}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ model:'tts-1-hd', voice, input:clean, speed:0.92 })
+    });
+    if (!r.ok) { setStatus('マイクを押して話してください',''); return; }
+    const url = URL.createObjectURL(await r.blob());
+    currentAudio = new Audio(url);
+    currentAudio.play();
+    currentAudio.onended = () => { setStatus('マイクを押して話してください',''); currentAudio=null; };
+  } catch { setStatus('マイクを押して話してください',''); }
+}
+
+function stopAudio() {
+  if (currentAudio) { currentAudio.pause(); currentAudio=null; }
+  document.querySelectorAll('.bubble-play.playing').forEach(b => { b.classList.remove('playing'); b.textContent='🔊'; });
+  setStatus('マイクを押して話してください','');
+}
+
+// ── UI HELPERS ──
+function addBubble(role, text, doSpeak=false) {
+  const feed = document.getElementById('feed');
+  document.getElementById('empty')?.remove();
+
+  const isS = role==='sensei';
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+
+  const av = document.createElement('div');
+  av.className = `avatar ${isS?'s':'u'}`;
+  av.textContent = isS ? '先' : userName.charAt(0).toUpperCase();
+
+  const bwrap = document.createElement('div');
+  bwrap.className = 'bubble-wrap';
+
+  // Parse correction
+  const { mainText, correctionHTML } = parseCorrection(text);
+
+  if (showText || !isS) {
+    const bub = document.createElement('div');
+    bub.className = 'bubble';
+    bub.innerHTML = formatText(mainText);
+    bwrap.appendChild(bub);
+
+    if (correctionHTML && isS) {
+      const cor = document.createElement('div');
+      cor.className = 'correction';
+      cor.innerHTML = correctionHTML;
+      bwrap.appendChild(cor);
+    }
+  }
+
+  if (isS) {
+    const pb = document.createElement('button');
+    pb.className = 'bubble-play';
+    pb.textContent = '🔊';
+    pb.onclick = async () => {
+      if (pb.classList.contains('playing')) { stopAudio(); pb.classList.remove('playing'); pb.textContent='🔊'; return; }
+      stopAudio();
+      pb.classList.add('playing'); pb.textContent='⏹';
+      await speak(text, true);
+      pb.classList.remove('playing'); pb.textContent='🔊';
+    };
+    bwrap.appendChild(pb);
+  }
+
+  wrap.appendChild(av);
+  wrap.appendChild(bwrap);
+  feed.appendChild(wrap);
+  feed.scrollTop = feed.scrollHeight;
+
+  if (doSpeak && autoPlay && isS) speak(text, true);
+}
+
+function parseCorrection(text) {
+  // Separate ✅/📝 lines from main text
+  const lines = text.split('\n');
+  const mainLines = [], corrLines = [];
+  let inCorr = false;
+  lines.forEach(l => {
+    if (l.startsWith('✅') || l.startsWith('📝') || inCorr) {
+      inCorr = true;
+      corrLines.push(l);
+    } else { mainLines.push(l); }
+  });
+
+  const correctionHTML = corrLines.length > 0
+    ? `<div class="correction-title">フィードバック</div>` + corrLines.map(l => `<div>${esc(l)}</div>`).join('')
+    : '';
+
+  return { mainText: mainLines.join('\n').trim(), correctionHTML };
+}
+
+function formatText(t) {
+  // Furigana: 漢字（ふりがな）
+  t = t.replace(/([^\x00-\x7F\s、。！？…「」『』【】\n]+)（([ぁ-ん]+)）/g, '<ruby>$1<rt>$2</rt></ruby>');
+  // Bold
+  t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  return t;
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let _thinkEl = null;
+function showThinking() {
+  const feed = document.getElementById('feed');
+  const d = document.createElement('div');
+  d.className = 'msg sensei'; d.id = '_think';
+
+  const av = document.createElement('div');
+  av.className = 'avatar s'; av.textContent = '先';
+
+  const t = document.createElement('div');
+  t.className = 'thinking';
+  ['','',''].forEach(() => { const dot=document.createElement('div'); dot.className='t-dot'; t.appendChild(dot); });
+
+  d.appendChild(av); d.appendChild(t);
+  feed.appendChild(d);
+  feed.scrollTop = feed.scrollHeight;
+  _thinkEl = d;
+}
+
+function removeThinking() {
+  document.getElementById('_think')?.remove();
+  _thinkEl = null;
+}
+
+function setStatus(txt, mode) {
+  document.getElementById('s-txt').textContent = txt;
+  const d = document.getElementById('s-dot');
+  d.className = 'status-dot' + (mode ? ' '+mode : '');
+}
+
+function clearChat() {
+  stopAudio();
+  history = [];
+  sessionStarted = false;
+  document.getElementById('feed').innerHTML =
+    `<div class="empty-feed" id="empty"><div class="empty-kanji">先</div><div class="empty-text">マイクボタンを押して<br>先生と話しましょう</div></div>`;
+  setStatus('準備完了','');
+  // Restart lesson
+  sessionStarted = true;
+  startLesson();
+}
+
+let _tt;
+function toast(msg, type='') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>
