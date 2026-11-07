@@ -167,6 +167,10 @@ small{color:var(--mute)}
 .tnote{background:#f2c14e14;border:1px solid #f2c14e55;border-radius:12px;padding:8px 12px;font-size:13px;line-height:1.7;margin:8px 0}
 .rep .bar2{height:8px;background:var(--bg);border-radius:6px;overflow:hidden;margin:3px 0 8px}
 .rep .bar2 i{display:block;height:100%;background:var(--ac,var(--gold))}
+.jpbig{font-family:var(--serif);font-size:22px;line-height:1.8;margin:12px 0 6px;font-weight:700}
+.jpbig.hid{filter:blur(9px);user-select:none}
+@keyframes recpulse{0%,100%{box-shadow:0 0 0 0 #ef5b4588}50%{box-shadow:0 0 0 14px #ef5b4500}}
+.recing{animation:recpulse 1.1s infinite}
 .exp{font-size:14px;line-height:1.75;color:#dfe3f7;margin:8px 0 14px}
 .fbb{display:flex;gap:10px}.fbb .btn{flex:1;font-size:14px;padding:12px 8px}
 
@@ -866,6 +870,7 @@ function renderHome(){
       <div class="chips"><span class="chip">🔥 ${S.streakDays}日</span><span class="chip">⭐ ${S.xp}</span></div></div>
     <div class="rank"><div class="row"><b>${rk.name}</b><small>${rk.next?S.xp+" / "+rk.next+" XP":"MAX"}</small></div><div class="bar"><i style="width:${pct}%"></i></div></div>
     ${coachCard()}
+    ${speakCard()}
     <div class="tabs">${Object.keys(LEVELS).map(l=>`<button class="tab ${l===curLv?"on":""}" style="--ac:${LEVELS[l].color}" data-act="lv" data-lv="${l}">${l}</button>`).join("")}</div>
     <div class="world">${art(curLv)}<div class="cap"><h2>${L.title}</h2><small>${L.sub} ・ ★ ${total}/${sts.length*3}</small></div></div>
     <div class="path">${sts.map(s=>{
@@ -1219,8 +1224,259 @@ async function openReport(){
   }catch(e){const c=$("#cmt");if(c)c.innerHTML=`<div class="load">⚠ ${esc(e.message)}</div>`}
 }
 
+/* ---------- 話す練習：データ（原創・よく使われる口語表現）---------- */
+const SP=[];
+const sh=(lv,reg,jp,zh,note)=>SP.push({id:lv+"-sh-"+(SP.filter(x=>x.lv===lv&&x.k==="sh").length+1),k:"sh",lv,reg,jp,zh,note:note||""});
+const fl=(lv,reg,task,lines,ans,zh,alts,note)=>SP.push({id:lv+"-fl-"+(SP.filter(x=>x.lv===lv&&x.k==="fl").length+1),k:"fl",lv,reg,task,lines,ans,zh,alts:alts||[],note:note||""});
+/* N3 */
+sh("N3","口語・友だち","マジで？ それ、ほんとなの？","真的假的？那是真的嗎？","「マジで」＝真的（年輕人口語），工作場合改用「本当ですか」。");
+sh("N3","口語・友だち","ちょっと待って、今それどころじゃないんだけど。","等一下，我現在沒空管那個。","「それどころじゃない」＝現在沒心情／沒餘力做那件事。");
+sh("N3","口語・友だち","まあ、いっか。次、頑張ればいいし。","算了，下次加油就好。","「いっか」＝「いいか」的口語縮約。");
+sh("N3","口語","やばい、遅刻しそう！","糟了，要遲到了！","「やばい」可好可壞，要看語境。");
+sh("N3","口語","え、うそ。もう終わっちゃったの？","咦，不會吧。已經結束了？","「〜ちゃった」＝「〜てしまった」的口語。");
+sh("N3","口語・友だち","いいじゃん、それ。似合ってるよ。","不錯嘛，那個。很適合你喔。","「〜じゃん」＝「〜じゃないか」，帶輕鬆肯定語氣。");
+sh("N3","口語","なんか、今日は疲れちゃって、何もやる気が出ないんだ。","總覺得今天很累，什麼都提不起勁。","「やる気が出ない」＝提不起勁。");
+sh("N3","ドラマ風","それ、言わなきゃよかった…。","早知道就不要說那個了……","「〜なきゃよかった」＝早知道不要…（後悔）。");
+sh("N3","口語・友だち","だって、しかたないじゃん。","可是，也沒辦法嘛。","「だって」用於辯解，語氣偏孩子氣。");
+sh("N3","口語","ねえ、聞いてる？ さっきから全然返事してくれないんだけど。","喂，你有在聽嗎？從剛才到現在都完全不回應我。","「〜てくれない」＝對方沒為我做…（帶不滿）。");
+sh("N3","口語","ごめん、ちょっと用事ができちゃって、行けなくなった。","抱歉，臨時有事，去不了了。","「〜なくなった」＝變得不能…。");
+sh("N3","口語・友だち","今度、ゆっくり話そうよ。","下次找時間好好聊聊吧。","「〜ようよ」＝邀請（口語）。");
+sh("N3","口語","ほんとに？ 絶対だよ？","真的嗎？一定喔？","確認約定的口語。");
+sh("N3","口語","うーん、どうしようかな。迷うなあ。","嗯……要怎麼辦呢。好猶豫喔。","「迷う」＝猶豫、拿不定主意。");
+sh("N3","アニメ腔（現実ではまれ）","俺に任せろ！ 絶対に守ってみせる！","交給我吧！我一定會保護你！","動畫常見的熱血角色腔，真實生活中少用；要能聽懂就好。");
+sh("N3","口語","もう、しょうがないなあ。今回だけだよ。","真是的，拿你沒辦法。就這一次喔。","「しょうがない」＝沒辦法。");
+sh("N3","職場・口語","お疲れ！ 今日もよく頑張ったね。","辛苦了！今天也很努力呢。","同輩、後輩之間的說法；對上司用「お疲れさまです」。");
+sh("N3","口語","どうしたの？ 元気ないみたいだけど。","怎麼了？你看起來沒什麼精神。","「〜みたい」＝好像。");
+sh("N3","口語","そんなに心配しなくても、きっと大丈夫だよ。","不用那麼擔心，一定沒問題的。","安慰人時常用。");
+sh("N3","口語","あとで連絡するね。じゃあ、またね！","我晚點聯絡你喔。那麼，再見！","結尾常用的 ね，帶親切感。");
+fl("N3","友だち","你遲到了，告訴朋友你會晚到，請他們先開始。",[["M","もしもし、今どこ？ もうみんな待ってるよ。"]],"ごめん、電車が遅れちゃって。先に始めてて。","抱歉，電車誤點了。你們先開始吧。",["ごめん、ちょっと遅れる。先にやってて。","遅れそうなんだ。先に始めてもらえる？"]);
+fl("N3","お店","你想在餐廳點餐，向店員說要點一份今日套餐。",[["F","いらっしゃいませ。ご注文はお決まりですか。"]],"はい、今日のランチをお願いします。","好的，麻煩給我今日午餐。",["今日のランチをください。","日替わりランチをお願いします。"]);
+fl("N3","友だち","朋友問你週末有沒有空，你說沒空，因為有事，並提議下週。",[["F","今度の土曜、ごはん行かない？"]],"ごめん、その日はちょっと用事があって。来週はどう？","抱歉，那天有點事。下週如何？",["その日は予定があるんだ。来週なら大丈夫だよ。"]);
+fl("N3","職場","同事謝謝你，你回他不客氣，並說有需要隨時說。",[["M","昨日は手伝ってくれて、ほんとに助かったよ。"]],"いえいえ、また何かあったら、いつでも言ってね。","哪裡哪裡，有事隨時跟我說。",["どういたしまして。困ったときは、お互いさまだよ。"]);
+fl("N3","お店","衣服尺寸不合，請店員幫你換大一點的。",[["F","いかがですか。サイズは合いましたか。"]],"ちょっと小さいので、もう少し大きいのはありますか。","有點小，有大一點的嗎？",["すみません、もう一つ大きいサイズに替えてもらえますか。"]);
+fl("N3","友だち","朋友說他今天很累，你關心他並建議早點休息。",[["M","はあ、今日は一日中、疲れた…。"]],"大丈夫？ 今日は早く帰って、ゆっくり休んだほうがいいよ。","還好嗎？今天早點回家好好休息比較好喔。",["お疲れさま。無理しないで、早く寝なよ。"]);
+fl("N3","電話","打電話預約，說你想預約明天晚上七點兩個人。",[["F","お電話ありがとうございます。レストラン花です。"]],"あの、明日の夜七時に、二人で予約したいんですが。","那個，我想預約明天晚上七點，兩個人。",["明日の七時に二名で予約をお願いします。"]);
+fl("N3","職場","你沒聽清楚，請對方再說一次，慢一點。",[["M","来週の会議の件ですが、資料は火曜の午前までに共有してください。"]],"すみません、もう一度、ゆっくり言っていただけますか。","不好意思，可以請您再說一次，慢一點嗎？",["すみません、よく聞き取れませんでした。もう一度お願いします。"]);
+/* N2 */
+sh("N2","ドラマ風・口語","勘弁してよ、また残業？","饒了我吧，又要加班？","「勘弁して」＝饒了我吧（無奈、抱怨）。");
+sh("N2","口語","そんなわけないでしょ。ちゃんと確認したの？","怎麼可能。你有好好確認過嗎？","「〜わけない」＝不可能。");
+sh("N2","口語","言っとくけど、私は最初から反対だったからね。","先說清楚，我從一開始就反對的喔。","「言っとく」＝「言っておく」的縮約。");
+sh("N2","口語","あれ、何だっけ。ほら、あの、駅前の店。","咦，那個叫什麼來著。就是那個，車站前的店。","「〜っけ」＝回想、確認（想不起來）。");
+sh("N2","ドラマ風","いいかげんにしてよ。何度言ったらわかるの？","夠了喔。要我說幾次你才懂？","生氣時的說法，不適合對上司。");
+sh("N2","口語","やっぱりね。そうなると思ってたよ。","果然啊。我就想說會變成這樣。","「やっぱり」＝「やはり」的口語。");
+sh("N2","口語","そんなこと、今さら言われても困るんだけど。","那種事到現在才說，我也很困擾。","「今さら」＝事到如今。");
+sh("N2","ドラマ風","まさか、あの人が辞めるとは思わなかった。","沒想到，那個人居然會辭職。","「まさか〜とは思わなかった」＝萬萬沒想到。");
+sh("N2","口語","はいはい、わかったってば。すぐやるから。","好啦好啦，我知道了啦。馬上做。","「〜ってば」＝強調（不耐煩）。");
+sh("N2","ドラマ風","だからって、勝手に決めていいわけじゃないでしょう。","就算這樣，也不能擅自決定吧。","「〜わけじゃない」＝並不是…。");
+sh("N2","職場・口語","悪いけど、今回は見送らせてもらうよ。","不好意思，這次我就不參加了。","「見送る」＝這次放棄／不採取行動。");
+sh("N2","職場","そこをなんとか、お願いできませんか。","這一點還請您通融一下，可以嗎？","「そこをなんとか」＝拜託通融。");
+sh("N2","口語","気にしないで。お互いさまだから。","別放在心上。大家彼此彼此。","回應道歉或道謝時常用。");
+sh("N2","口語","あの人、見かけによらず、結構頑固なんだよね。","那個人，人不可貌相，其實相當固執呢。","「見かけによらず」＝人不可貌相。");
+sh("N2","ドラマ風","別に、怒ってるわけじゃないよ。ただ、ちょっと残念だっただけ。","我並不是在生氣喔。只是覺得有點可惜而已。","「別に」＝並沒有特別…。");
+sh("N2","職場","とりあえず、話だけでも聞いてもらえませんか。","總之，可以請您先聽聽看嗎？","「とりあえず」＝先…。");
+sh("N2","口語","ここだけの話なんだけど、来月、異動になるかもしれない。","這是只在這裡說的，下個月我可能會調職。","「ここだけの話」＝別外傳。");
+sh("N2","口語","つい言い過ぎちゃった。ごめん。","不小心說太過分了。對不起。","「つい」＝不由自主地。");
+sh("N2","ドラマ風","ありえない。あんなに準備したのに、全部やり直し？","不可能吧。準備得那麼充分，卻要全部重來？","「ありえない」＝難以置信。");
+sh("N2","ドラマ風","どうせ無理だろうって、最初から決めつけないでよ。","不要一開始就認定反正不可能嘛。","「どうせ」＝反正；「決めつける」＝斷定。");
+fl("N2","職場","同事問你方案進度，你說大致完成，但還要確認細節，後天交。",[["M","例の企画書、進み具合はどう？"]],"だいたいできましたが、細かい部分を確認してから、あさってまでに提出します。","大致完成了，但要確認細節，後天前提出。",["ほぼ完成しています。細部を確認して、あさってには出せると思います。"]);
+fl("N2","友だち","朋友一直遲到，你委婉地說有點困擾，希望下次能提早說。",[["F","ごめん、また遅れちゃった。"]],"来てくれてうれしいけど、遅れるときは、先に連絡してもらえると助かるな。","你來了我很高興，不過如果會遲到，能先聯絡我就太好了。",["責めるつもりはないけど、次からは前もって連絡してくれる？"]);
+fl("N2","職場","客戶要求更短的交期，你說需要回公司商量再回覆。",[["M","納期をあと三日、早められないでしょうか。"]],"一度、社内で相談したうえで、改めてご連絡いたします。","我先在公司內部討論，再另行聯絡您。",["持ち帰って検討させていただきます。"]);
+fl("N2","電話","你要請對方轉接負責人，說明你是誰、找誰。",[["F","はい、山田商事でございます。"]],"お世話になっております。田中と申します。営業の佐藤様はいらっしゃいますか。","承蒙關照，我姓田中。請問業務的佐藤先生在嗎？",["田中ですが、佐藤さんをお願いできますか。"]);
+fl("N2","友だち","朋友說他想辭職，你表示理解但建議先冷靜想想。",[["M","もう、今の会社、辞めようかな。"]],"気持ちはわかるけど、辞める前に、もう少しよく考えたほうがいいんじゃない？","我懂你的心情，不過辭職之前，再多想想比較好吧？",["急がないで、まず落ち着いて考えてみたら？"]);
+fl("N2","職場","同事問你方便幫忙嗎，你想婉拒因為手上事情太多。",[["F","悪いんだけど、この資料、手伝ってもらえないかな。"]],"申し訳ないんですが、今、手がいっぱいで。終わってからでもいいですか。","抱歉，我現在手上滿檔。做完之後可以嗎？",["すみません、今は余裕がなくて。後ででよければ手伝います。"]);
+fl("N2","お店","你買的商品壞了，向店員說明想退貨。",[["M","いらっしゃいませ。どうなさいましたか。"]],"先週買ったこの商品なんですが、動かなくて。返品したいんです。","上週買的這個商品，沒辦法動。我想退貨。",["この商品が壊れているので、返品か交換をお願いしたいんですが。"]);
+fl("N2","友だち","朋友說他考試考不好，你安慰他並鼓勵他下次。",[["F","テスト、全然だめだった…。"]],"そんなに落ち込まないで。次、頑張ればいいじゃん。","別那麼沮喪。下次加油就好啦。",["残念だったけど、今回の経験を、次に生かせばいいよ。"]);
+/* N1 */
+sh("N1","職場・丁寧","差し出がましいようですが、一言だけ、申し上げてもよろしいでしょうか。","或許有點多嘴，但我可以說一句話嗎？","「差し出がましい」＝多管閒事的；委婉開口的敬語。");
+sh("N1","評論・口語","そうは言っても、現実にはなかなか難しいのが実情です。","話雖如此，實際上相當困難才是實情。","「そうは言っても」＝話是這麼說，但…。");
+sh("N1","口語","言うは易く行うは難しで、口で言うほど簡単じゃないよ。","說比做容易，沒有嘴上說的那麼簡單喔。","慣用句，常見於評論或對話。");
+sh("N1","ドラマ風","今さら何を言っても始まらない。これからどうするかを考えよう。","事到如今說什麼都沒用。來想想接下來怎麼辦吧。","「〜ても始まらない」＝…也沒用。");
+sh("N1","職場・丁寧","おっしゃることはごもっともですが、現段階では、お約束いたしかねます。","您說的很有道理，但現階段我無法向您保證。","「〜かねます」＝難以…（委婉拒絕）。");
+sh("N1","ドラマ風","そんなつもりじゃなかったのに、結果的に、彼を傷つけてしまった。","我並沒有那個意思，結果卻傷了他。","「結果的に」＝結果上。");
+sh("N1","口語・議論","彼の言い分にも、一理あるとは思うけど、納得はできないな。","他的說法也有幾分道理，但我無法接受。","「一理ある」＝有道理。");
+sh("N1","職場・丁寧","結論から言えば、このまま続けるのは得策ではないと思います。","先說結論，我認為繼續這樣下去不是上策。","「得策ではない」＝不是好辦法。");
+sh("N1","口語","あれこれ考えるより、まず動いてみたほうが早いんじゃないかな。","與其東想西想，先動手做可能比較快。","「あれこれ」＝這個那個。");
+sh("N1","職場・丁寧","その件につきましては、改めてご連絡させていただきます。","關於那件事，我會再另行聯絡您。","商務電話、郵件常用句型。");
+sh("N1","口語・議論","いや、そういう問題じゃなくて、基本的な姿勢の話をしているんだよ。","不，問題不在那裡，我是在說基本態度。","「そういう問題じゃない」＝問題不在那裡。");
+sh("N1","評論","結局のところ、誰かが責任を取らなきゃいけないってことでしょう。","說到底，就是必須有人負起責任吧。","「結局のところ」＝歸根結底。");
+sh("N1","ドラマ風・書き言葉","彼女は、笑顔の裏で、相当なプレッシャーを抱えていたに違いない。","她在笑容背後，一定承受著相當大的壓力。","「〜に違いない」＝一定…。");
+sh("N1","口語","そんなに簡単に割り切れるものなら、苦労しないよ。","如果能那麼輕易想開，就不用這麼辛苦了。","「割り切る」＝想開、乾脆處理。");
+sh("N1","評論","たとえ失敗しても、そこから学べることは、少なくないはずだ。","即使失敗，從中能學到的東西應該也不少。","「たとえ〜ても」＝即使…也。");
+sh("N1","職場・丁寧","お言葉ですが、その点については、少し認識が異なるようです。","恕我直言，關於那一點，我們的認知似乎有些不同。","委婉反駁上司或客戶的句型。");
+sh("N1","ドラマ風","あの頃は、毎日が必死で、振り返る余裕すらなかった。","那時候每天都拼了命，連回頭看的餘裕都沒有。","「〜すら」＝連…都…。");
+sh("N1","職場・丁寧","ご期待に沿えず、誠に申し訳ございません。","未能符合您的期待，真的非常抱歉。","「期待に沿う」＝符合期待。");
+sh("N1","書き言葉","時間がたつにつれて、当時の記憶も、徐々にあいまいになってきた。","隨著時間流逝，當時的記憶也逐漸模糊了。","「〜につれて」＝隨著…。");
+sh("N1","書き言葉・小説","彼の態度は、一見穏やかだが、内心では、相当苛立っているようだった。","他的態度乍看溫和，但內心似乎相當焦躁。","「一見〜だが」＝乍看之下…但…。");
+fl("N1","職場","你要婉拒客戶無理的要求，並提出替代方案。",[["M","できれば、明日までに全部、仕上げていただきたいんですが。"]],"大変申し訳ございませんが、明日までに全部というのは難しい状況です。優先度の高い部分だけでも、先にお渡しできればと存じます。","非常抱歉，明天前全部完成有困難。如果可以，我先交付優先度高的部分。",["恐れ入りますが、全部は難しいので、一部を先にお渡しする形でいかがでしょうか。"]);
+fl("N1","職場","會議上你想表達不同意見，先肯定對方再提出疑慮。",[["F","このプランで、来月から進めたいと思います。"]],"おっしゃるとおり、方向性は賛成なんですが、予算の面で、少し懸念があります。","您說得對，方向我贊成，但預算方面有些疑慮。",["趣旨には賛成ですが、費用面について、確認させていただけますか。"]);
+fl("N1","友だち","朋友一直拖延決定，你有點無奈，勸他不要再猶豫。",[["M","うーん、やっぱり、もう少し考えさせて…。"]],"気持ちはわかるけど、いつまでも迷っていても、何も始まらないよ。","我懂你的心情，但一直猶豫也不會有進展喔。",["慎重になるのもいいけど、そろそろ決めないと、チャンスを逃すよ。"]);
+fl("N1","職場","你向上司報告出了錯，先道歉，再說明原因與對策。",[["F","どうした？ 顔色が悪いけど。"]],"申し訳ありません。納品先に、誤った資料を送ってしまいました。すぐに連絡して、訂正版をお送りします。","非常抱歉。我把錯誤的資料寄給了客戶。我馬上聯絡並寄出更正版。",["私の確認不足で、ミスをしてしまいました。今、対応しているところです。"]);
+fl("N1","口語・議論","朋友批評你的提案太理想化，你承認有道理，但解釋你的想法。",[["M","君の案は、理想としてはいいけど、現実的じゃないよね。"]],"確かに、ご指摘のとおりだけど、まず小さく試してみれば、見えてくる課題もあるんじゃないかな。","確實如你所說，不過先小規模試試，也許能看見一些課題。",["その点は認めるけど、段階的に進めれば、実現できると思うんだ。"]);
+fl("N1","職場","對方道謝並稱讚你，你謙虛地回應。",[["M","今回のプロジェクト、君のおかげで、本当にうまくいったよ。"]],"とんでもないです。皆さんのご協力があったからこそです。","哪裡的話。是因為有大家的協助才能成功。",["いえいえ、私一人の力ではありません。チームのおかげです。"]);
+fl("N1","電話","你打電話向客人道歉，因為商品延遲，並說明新的交貨日。",[["F","はい、お電話ありがとうございます。"]],"このたびは、納品が遅れてしまい、誠に申し訳ございません。新しいお届け日は、来週の水曜日を予定しております。","這次因延遲交貨，真的非常抱歉。新的送達日預計是下週三。",["ご迷惑をおかけして、申し訳ございません。お届けは来週水曜日になる見込みです。"]);
+fl("N1","口語","朋友說你變了，你解釋是因為經歷改變想法。",[["F","なんか、昔と比べて、ずいぶん考え方が変わったね。"]],"そうかもしれない。いろいろな経験をするうちに、物事の見方が、自然と変わってきたんだと思う。","也許吧。經歷了各種事之後，我看事情的角度自然就改變了。",["確かに変わったね。あれこれあって、考えさせられたことが多かったから。"]);
+
+/* ---------- 話す練習：ロジック ---------- */
+S.sp=S.sp||{};S.sstat=S.sstat||{};
+let sp=null,mr=null,mrStream=null,mrChunks=[],mrTimer=null,mrMime="";
+const spNorm=s=>String(s||"").replace(/[\s、。，．,.!！?？「」『』（）()…～~・\-—ー]/g,"").toLowerCase();
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,i)=>i);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const simScore=(a,b)=>{a=spNorm(a);b=spNorm(b);if(!a&&!b)return 100;return Math.max(0,Math.round((1-lev(a,b)/Math.max(a.length,b.length))*100))};
+const HALLU=/ご視聴ありがとう|チャンネル登録|字幕|おやすみなさい$|^ん?$/;
+function speakCard(){
+  const n=(k)=>SP.filter(x=>x.lv===curLv&&x.k===k).length;
+  return `<div class="coach" style="border-color:var(--mint);background:linear-gradient(135deg,#1b3a3a,#1c2a4d)"><div class="r1"><div><b>🎤 話す練習</b><small>ドラマ・アニメでもよく聞く口語表現を、聞いて・声に出して練習します</small></div></div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" data-act="spstart" data-k="sh" style="flex:1;padding:9px 6px;font-size:13.5px">🔁 まねして言う<small style="color:var(--mute);display:block">${n("sh")}文</small></button><button class="btn ghost" data-act="spstart" data-k="fl" style="flex:1;padding:9px 6px;font-size:13.5px">🧩 場面で答える<small style="color:var(--mute);display:block">${n("fl")}場面</small></button></div></div>`;
+}
+function startSpeak(k){
+  if(!KEY){toast("OpenAI Key が必要です");return}
+  if(!(navigator.mediaDevices&&window.MediaRecorder)){toast("このブラウザは録音に対応していません",4000);return}
+  kick();
+  const pool0=SP.filter(x=>x.lv===curLv&&x.k===k);
+  const items=shuffle(pool0.slice()).sort((a,b)=>((S.sp[a.id]?S.sp[a.id].best:-1))-((S.sp[b.id]?S.sp[b.id].best:-1))).slice(0,8);
+  playToken++;stopSrc();
+  sp={k,lv:curLv,items,i:0,res:[],xp:0,state:"idle",hide:false,last:null};
+  renderSpeak();
+}
+const spVoice=it=>(it.id.length+it.id.charCodeAt(it.id.length-1))%2?"M":"F";
+function renderSpeak(){
+  const it=sp.items[sp.i],L=LEVELS[sp.lv],fill=sp.k==="fl";
+  const body=fill
+   ?`<div class="sit" style="text-align:left">${esc(it.task)}</div>
+     <div class="script" style="text-align:left">${it.lines.map(l=>`<div class="sl"><i class="${l[0][0]==="F"?"f":"m"}">${LAB[l[0]]}</i><span>${tapWrap(l[1])}</span></div>`).join("")}<div class="sl"><i class="f" style="background:var(--gold);color:#1a1530">あなた</i><span style="color:var(--gold)">（　　　　　）</span></div></div>`
+   :`<div class="jpbig ${sp.hide?"hid":""}" id="jpbig">${tapWrap(it.jp)}</div>${sp.hide?`<small style="color:var(--mute)">文字を隠しています（耳だけで）</small>`:""}`;
+  app.innerHTML=`<div style="--ac:${L.color}">
+    <div class="qtop"><button class="x" data-act="spquit">✕</button><div class="dots">${sp.items.map((_,i)=>`<i class="${sp.res[i]!=null?(sp.res[i]>=80?"ok":sp.res[i]>=60?"cur":"ng"):i===sp.i?"cur":""}"></i>`).join("")}</div><div class="hearts">${sp.i+1}/${sp.items.length}</div></div>
+    <div class="qcard"><div class="qtype">${fill?"🧩 場面で答える":"🔁 まねして言う"}<small>${esc(it.reg)}</small></div>
+      ${body}
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">
+        <button class="btn ghost" data-act="spplay" style="padding:8px 12px;font-size:13px">🔊 ${fill?"会話を聞く":"お手本"}</button>
+        <button class="btn ghost" data-act="spslow" style="padding:8px 12px;font-size:13px">🐢 ゆっくり</button>
+        ${fill?"":`<button class="btn ghost" data-act="sphide" style="padding:8px 12px;font-size:13px">${sp.hide?"👁 文字を出す":"🙈 文字を隠す"}</button>`}
+      </div>
+      <button class="pbtn" id="recbtn" data-act="sprec" style="margin-top:14px;background:var(--verm)">🎤 録音して話す</button>
+      <div class="astat" id="spstat">${fill?"会話を聞いて、あなたの番で答えてください":"お手本を聞いて、まねして言ってみましょう"}</div>
+    </div><div id="spfb"></div></div>`;
+  if(sp.last&&sp.last.i===sp.i)showSpeakResult(sp.last);
+}
+async function spPlay(slow){
+  const it=sp.items[sp.i];if(!it)return;
+  kick();const my=++playToken;stopSrc();
+  const old=S.set.slow;if(slow)S.set.slow=true;
+  try{
+    const parts=sp.k==="fl"?it.lines.map(l=>({v:l[0],t:l[1],gap:0.6})):[{v:spVoice(it),t:it.jp,gap:0}];
+    await playParts(parts,sp.lv,my);
+  }catch(e){toast(e.message==="NEEDGESTURE"?"もう一度タップしてください":e.message,4000)}
+  finally{S.set.slow=old}
+}
+async function spRecToggle(){
+  if(mr&&mr.state==="recording"){mr.stop();return}
+  if(sp.state==="busy")return;
+  playToken++;stopSrc();
+  try{
+    mrStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  }catch(e){toast("マイクの許可が必要です（ブラウザの設定を確認してください）",5000);return}
+  const types=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"];
+  mrMime=types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||"";
+  mrChunks=[];
+  mr=mrMime?new MediaRecorder(mrStream,{mimeType:mrMime}):new MediaRecorder(mrStream);
+  mr.ondataavailable=e=>{if(e.data&&e.data.size)mrChunks.push(e.data)};
+  mr.onstop=()=>{clearTimeout(mrTimer);mrStream.getTracks().forEach(t=>t.stop());const type=mr.mimeType||mrMime||"audio/webm";spProcess(new Blob(mrChunks,{type}),type)};
+  mr.start();sp.state="rec";
+  const b=$("#recbtn");if(b){b.textContent="⏹ 話し終わったらタップ";b.classList.add("recing")}
+  const s=$("#spstat");if(s)s.textContent="🔴 録音中… （15秒で自動停止）";
+  mrTimer=setTimeout(()=>{if(mr&&mr.state==="recording")mr.stop()},15000);
+}
+async function transcribe(blob,type){
+  const ext=type.includes("mp4")?"m4a":type.includes("ogg")?"ogg":"webm";
+  const fd=new FormData();
+  fd.append("file",new File([blob],"speech."+ext,{type}));
+  fd.append("model","whisper-1");fd.append("language","ja");fd.append("temperature","0");
+  fd.append("prompt","日本語の短い会話です。");
+  const r=await fetch("https://api.openai.com/v1/audio/transcriptions",{method:"POST",headers:{Authorization:"Bearer "+KEY},body:fd});
+  if(!r.ok){let m="";try{m=(await r.json()).error.message}catch(e){}
+    if(r.status===401)throw new Error("Key が無効です（401）");
+    if(r.status===429)throw new Error(/quota|billing/i.test(m)?"クレジットが足りません":"リクエストが多すぎます");
+    throw new Error("認識エラー "+r.status);}
+  return (await r.json()).text||"";
+}
+async function judgeSpeech(it,heard){
+  if(sp.k==="sh"){
+    if(spNorm(heard)===spNorm(it.jp))return {score:100,feedback:"完璧です！お手本と同じ内容が認識されました。",diffs:[]};
+    const sys="あなたは日本語の発音・口語練習を見る、優しく具体的な先生です。JSONのみ返します。繁體中文で書いてください。";
+    const usr=`学習者がお手本を聞いてまねして言いました。音声認識(Whisper)の結果と比べて評価してください。\nお手本：${it.jp}\n認識結果：${heard}\n\n注意：認識結果は機械の聞き取りなので、漢字・かな表記や句読点の違い、同じ読みの別表記は一致とみなす。内容の抜け・言い間違い・語の置き換えを見る。機械の誤認識の可能性もあるので、断定せず穏やかに。\nJSON：{"score":0〜100の整数,"feedback":"短い講評（中文）","diffs":[{"expected":"お手本の語句","heard":"認識された語句","tip":"言い方のコツ（中文）"}]}\ndiffs は最大3つ。`;
+    return await chatJSON(sys,usr,0.2);
+  }
+  const sys="あなたは日本語会話の先生です。学習者の発話の内容・自然さ・場面への合い方を評価します。JSONのみ返します。繁體中文で、優しく具体的に。";
+  const usr=`会話：\n${it.lines.map(l=>l[0]+"："+l[1]).join("\n")}\n学習者がすべきこと：${it.task}\n模範解答：${it.ans}\n他の許容例：${(it.alts||[]).join(" / ")}\n学習者の発話（音声認識）：${heard}\n\n評価の基準：意味が場面に合っているか（最重要）、文法・語彙、自然さ、丁寧さ（場面：${it.reg}）。模範解答と違っても、自然で適切なら高く評価する。音声認識の誤りの可能性があるので断定しない。\nJSON：{"score":0〜100の整数,"verdict":"◎自然|○通じる|△不自然|×場面に合わない","feedback":"講評（中文、2〜3文）","better":"より自然な言い方があれば（日本語1文、なければ空）"}`;
+  return await chatJSON(sys,usr,0.2);
+}
+async function spProcess(blob,type){
+  sp.state="busy";const my=sp.i;
+  const s=$("#spstat"),b=$("#recbtn");if(b){b.classList.remove("recing");b.textContent="🎤 録音して話す"}
+  if(blob.size<3000){sp.state="idle";if(s)s.textContent="録音が短すぎます。もう一度どうぞ。";return}
+  if(s)s.textContent="📝 認識しています…";
+  const it=sp.items[sp.i];
+  try{
+    let heard=(await transcribe(blob,type)).trim();
+    if(!spNorm(heard)||(HALLU.test(heard)&&!HALLU.test(it.jp||it.ans))){sp.state="idle";if(s)s.textContent="声がうまく認識できませんでした。静かな場所で、少し近づいてもう一度どうぞ。";return}
+    if(s)s.textContent="🎓 先生が聞いています…";
+    let j;
+    try{j=await judgeSpeech(it,heard)}
+    catch(e){if(sp.k==="sh")j={score:simScore(heard,it.jp),feedback:"（AI評価に接続できなかったため、文字の一致度で採点しました）",diffs:[]};else throw e}
+    j.score=Math.max(0,Math.min(100,Math.round(j.score||0)));
+    if(sp.i!==my)return;
+    const prev=sp.res[sp.i];
+    sp.last={i:sp.i,heard,j};
+    const gain=j.score>=80?10:j.score>=60?5:2;
+    if(prev==null){sp.xp+=gain;S.xp+=gain;const st=S.sstat[sp.k]||(S.sstat[sp.k]={n:0,sum:0});st.n++;st.sum+=j.score}
+    if(prev==null||j.score>prev)sp.res[sp.i]=j.score;
+    const rec=S.sp[it.id]||(S.sp[it.id]={best:0,tries:0});rec.tries++;rec.best=Math.max(rec.best,j.score);
+    save();sp.state="done";
+    renderSpeak();
+  }catch(e){sp.state="idle";if(s)s.textContent="⚠ "+e.message}
+}
+function showSpeakResult(o){
+  const it=sp.items[sp.i],j=o.j,fill=sp.k==="fl",last=sp.i>=sp.items.length-1;
+  const col=j.score>=80?"var(--mint)":j.score>=60?"var(--gold)":"var(--verm)";
+  const f=$("#spfb");if(!f)return;
+  f.innerHTML=`<div class="fb ${j.score>=80?"ok":j.score>=60?"":"ng"}">
+    <div class="fbh" style="color:${col}">${j.verdict?esc(j.verdict)+"　":""}${j.score}<small style="color:var(--mute)"> / 100</small></div>
+    <div class="nt" style="margin:6px 0"><b>認識された内容：</b>${esc(o.heard)}</div>
+    <div class="exp">🎓 ${esc(j.feedback||"")}</div>
+    ${(j.diffs&&j.diffs.length)?j.diffs.map(d=>`<div class="tnote">「${esc(d.expected||"")}」→ 認識：「${esc(d.heard||"")}」<br>${esc(d.tip||"")}</div>`).join(""):""}
+    ${j.better?`<div class="tnote">💬 より自然な言い方：<br>${tapWrap(j.better)} ${sayBtn(j.better)}</div>`:""}
+    <div class="script"><div class="sl"><i class="n">${fill?"模範":"原文"}</i><span>${tapWrap(fill?it.ans:it.jp)}</span>${sayBtn(fill?it.ans:it.jp)}</div><div class="sl"><i class="m">中文</i><span>${esc(it.zh)}</span></div></div>
+    ${it.note?`<div class="nt">💡 ${esc(it.note)}</div>`:""}
+    <p class="tip" style="margin-top:8px">※ 点数は「機械がどれだけ正しく聞き取れたか」を基準にした目安で、発音そのもの（アクセントや音の長さ）の採点ではありません。</p>
+    <div class="fbb"><button class="btn ghost" data-act="spagain">🎤 もう一度</button><button class="btn" data-act="spnext">${last?"結果へ":"次へ"} ▶</button></div></div>`;
+  f.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function spNext(){
+  playToken++;stopSrc();
+  if(sp.i>=sp.items.length-1)return finishSpeak();
+  sp.i++;sp.state="idle";sp.last=null;renderSpeak();window.scrollTo(0,0);
+}
+function finishSpeak(){
+  const done=sp.res.filter(x=>x!=null),avg=done.length?Math.round(done.reduce((a,b)=>a+b,0)/done.length):0;
+  const bonus=15;S.xp+=bonus;save();
+  const L=LEVELS[sp.lv];
+  app.innerHTML=`<div class="res" style="--ac:${L.color}"><div class="big">${avg>=80?"🎤✨":avg>=60?"🎤":"💪"}</div><h2>${avg>=80?"すばらしい！":avg>=60?"いい調子！":"よく頑張りました"}</h2><small>${sp.k==="sh"?"まねして言う":"場面で答える"} ・ ${sp.lv}</small>
+   <div class="stat"><div><b>${avg}</b><small>平均</small></div><div><b>${done.filter(x=>x>=80).length}/${sp.items.length}</b><small>80点以上</small></div><div><b>+${sp.xp+bonus}</b><small>XP</small></div></div>
+   <button class="btn block" data-act="spstart" data-k="${sp.k}">↻ もう一度（苦手なものから）</button><button class="btn ghost block" data-act="home">ホームへ</button></div>`;
+  window.scrollTo(0,0);
+}
+
 /* ---------- 事件 ---------- */
 const H={
+  spstart(el){startSpeak(el.dataset.k)},
+  spplay(){spPlay(false)},
+  spslow(){spPlay(true)},
+  sphide(){sp.hide=!sp.hide;renderSpeak()},
+  sprec(){spRecToggle()},
+  spagain(){sp.last=null;sp.state="idle";renderSpeak()},
+  spnext(){spNext()},
+  spquit(){if(confirm("練習を終わりますか？")){playToken++;stopSrc();if(mr&&mr.state==="recording"){mr.onstop=null;try{mr.stop()}catch(e){}if(mrStream)mrStream.getTracks().forEach(t=>t.stop())}sp=null;renderHome()}},
   train(){startTraining()},
   report(){openReport()},
   dknow(el){const x=S.wst[el.dataset.w];if(x){x.box=5;x.due=Date.now()+IVL[5]*DAY;save()}toast("了解！もう出題しません 👍");},
