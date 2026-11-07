@@ -136,6 +136,28 @@ small{color:var(--mute)}
 .vc .m{font-size:14px;color:var(--mint);margin:2px 0}
 .vc .e{font-size:13.5px;line-height:1.6;color:#dfe3f7}
 .vc .e i{display:block;font-style:normal;color:var(--mute);font-size:12.5px}
+.tw{border-bottom:1px dotted var(--mute);cursor:pointer;border-radius:3px}
+.tw:active{background:#f2c14e33}
+.sb{margin-left:auto;flex:none;font-size:11px;font-weight:700;color:var(--mute);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1px 7px;cursor:pointer}
+.dk .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dk .big{font-family:var(--serif);font-size:30px;font-weight:700}
+.dk .rd{color:var(--mute);font-size:15px}
+.dk .lv{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--gold);color:#1a1530}
+.dk .pos{font-size:12px;color:var(--mute)}
+.dk .zh{font-size:17px;color:var(--mint);margin:8px 0 2px;font-weight:700}
+.dk .ja{font-size:14px;line-height:1.7;color:#dfe3f7;margin:2px 0 10px}
+.dk h4{font-size:13px;color:var(--gold);margin:12px 0 4px;letter-spacing:.06em}
+.dk .us{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin:6px 0;font-size:14px;line-height:1.65}
+.dk .us small{display:inline-block;background:var(--card);border-radius:6px;padding:0 7px;color:var(--gold);font-size:11.5px;margin-bottom:2px}
+.dk .us i{display:block;font-style:normal;color:var(--mute);font-size:12.5px}
+.dk .nt{font-size:13.5px;line-height:1.7;color:#dfe3f7}
+.dk .acts{display:flex;gap:8px;margin-top:14px}
+.dk .acts .btn{flex:1;padding:10px 8px;font-size:14px}
+.dk .load{padding:30px 0;text-align:center;color:var(--mute)}
+.dk .wrow{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}
+.dk .wrow .t{flex:1;cursor:pointer}
+.dk .wrow .t b{font-family:var(--serif);font-size:17px}
+.dk .wrow .t small{display:block;color:var(--mute);font-size:12.5px}
 .exp{font-size:14px;line-height:1.75;color:#dfe3f7;margin:8px 0 14px}
 .fbb{display:flex;gap:10px}.fbb .btn{flex:1;font-size:14px;padding:12px 8px}
 
@@ -840,7 +862,7 @@ function renderHome(){
         <span class="node">${isBoss?"👹":T.icon}</span>
         <span class="si"><b>${isBoss?curLv+" 模擬試験":T.jp}</b><small>${isBoss?"全題型ランダム 8 問・ライフ 4":T.zh+" ・ "+n+"問"}</small></span>
         <span class="st">${"★".repeat(st)}${"☆".repeat(3-st)}</span></button>`}).join("")}</div>
-    <div class="sub"><button class="btn ghost" data-act="review">📒 復習 (${S.wrong.length})</button><button class="btn ghost" data-act="settings">⚙ 設定</button></div>
+    <div class="sub"><button class="btn ghost" data-act="review">📒 復習 (${S.wrong.length})</button><button class="btn ghost" data-act="words">📖 単語帳 (${(S.words||[]).length})</button><button class="btn ghost" data-act="settings">⚙ 設定</button></div>
     <p class="tip" style="text-align:center;margin-top:18px">題目為依 JLPT 官方題型自行編寫的原創練習題，非官方真題。</p>
   </div>`;
 }
@@ -920,10 +942,10 @@ function imgHTML(qi,pos){
 }
 function vocabHTML(qi){
   const v=V[qi.id];if(!v||!v.length)return "";
-  return `<div class="vocab"><h4>📚 キーワード</h4>`+v.map(x=>`<div class="vc"><div class="w">${x[0]}<small>${x[1]&&x[1]!==x[0]?x[1]:""}</small></div><div class="m">${x[2]}</div><div class="e">${x[3]}<i>${x[4]}</i></div></div>`).join("")+`</div>`;
+  return `<div class="vocab"><h4>📚 キーワード</h4>`+v.map(x=>`<div class="vc"><div class="w"><span class="tw" data-act="word" data-w="${esc(x[0])}" data-c="${esc(x[3])}">${esc(x[0])}</span><small>${x[1]&&x[1]!==x[0]?x[1]:""}</small></div><div class="m">${x[2]}</div><div class="e">${x[3]}<i>${x[4]}</i></div></div>`).join("")+`</div>`;
 }
 function scriptHTML(qi){
-  const row=(w,t)=>`<div class="sl"><i class="${w==="N"?"n":w[0]==="F"?"f":"m"}">${LAB[w]}</i><span>${t}</span></div>`;
+  const row=(w,t)=>`<div class="sl"><i class="${w==="N"?"n":w[0]==="F"?"f":"m"}">${LAB[w]}</i><span>${tapWrap(t)}</span><button class="sb" data-act="sent" data-c="${esc(t)}">文</button></div>`;
   let h="";
   if(qi.type==="quick"){h+=row(qi.lines[0][0],qi.lines[0][1]);qi.opts.forEach((o,i)=>h+=row(qi.rv||"F",(i+1)+". "+o))}
   else if(qi.type==="utter"){h+=row("N",qi.ask);qi.opts.forEach((o,i)=>h+=row(qi.rv||"F",(i+1)+". "+o))}
@@ -988,8 +1010,104 @@ function finishRun(){
 }
 function nextStageOf(id){const lv=id.split("-")[0],a=stagesOf(lv),i=a.findIndex(s=>s.id===id);return a[i+1]||null}
 
+
+/* ---------- 辞書（タップして調べる）---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SEG=(typeof Intl!=="undefined"&&Intl.Segmenter)?new Intl.Segmenter("ja",{granularity:"word"}):null;
+function tapWrap(t,minc){
+  if(!SEG)return esc(t);
+  let o="";
+  for(const s of SEG.segment(t)){
+    const w=s.segment;
+    if(s.isWordLike&&!/^[ぁ-んー]$/.test(w)&&!/^[0-9０-９]+$/.test(w))o+=`<span class="tw" data-act="word" data-w="${esc(w)}" data-c="${esc(t)}">${esc(w)}</span>`;
+    else o+=esc(w);
+  }
+  return o;
+}
+const DICT=LS.get("jq_dict",{});
+function dictSave(){const k=Object.keys(DICT);if(k.length>300)k.slice(0,k.length-300).forEach(x=>delete DICT[x]);LS.set("jq_dict",DICT)}
+const DSYS="あなたは、日本語を勉強している広東語話者（繁體中文で読む）のための日本語辞書です。説明は繁體中文、例文は自然で現代的な日本語にしてください。JSONのみを返します。";
+function dPrompt(mode,text,ctx){
+  if(mode==="w")return `次の語を調べてください。\n語: ${text}\n出てきた文: ${ctx||"（なし）"}\n学習者のレベル: ${curLv}\n\n活用形や一部だけの場合は、辞書形を word にしてください。この文での意味を優先してください。\nJSON形式:\n{"word":"辞書形","reading":"ひらがな","pos":"品詞（繁體中文）","jlpt":"N5|N4|N3|N2|N1|その他","zh":"中文意思（簡潔、この文脈での意味を先に）","ja":"やさしい日本語での説明（1〜2文、${curLv}の学習者が読める程度）","usages":[{"scene":"場面（中文2〜6字）","ja":"例文","zh":"中文翻譯"},{"scene":"…","ja":"…","zh":"…"},{"scene":"…","ja":"…","zh":"…"}],"nuance":"語感、使い方の注意、よくある間違い（中文）","similar":[{"w":"似た語","diff":"違い（中文、短く）"}]}\nusages は3つ。場面を変えてください（例：職場、友達との会話、ニュースや書き言葉、買い物、病院など）。similar は0〜2個。`;
+  return `次の文を解説してください。\n文: ${text}\n学習者のレベル: ${curLv}\n\nJSON形式:\n{"zh":"自然な中文翻譯","register":"丁寧さ・場面（中文、例：口語、職場、書き言葉）","grammar":[{"pattern":"文型","zh":"意味と使い方（中文）","ja":"例文（別の場面）"}],"words":[{"w":"語","reading":"ひらがな","zh":"中文","jlpt":"N5|N4|N3|N2|N1|その他"}],"tip":"聞き取りのコツ（縮約形・音の変化など、中文）"}\ngrammar は1〜3個、words は学習者に難しい語を最大6個。`;
+}
+async function askDict(mode,text,ctx){
+  const key=mode+"|"+text+"|"+(mode==="w"?(ctx||"").slice(0,60):"");
+  if(DICT[key])return DICT[key];
+  if(!KEY)throw new Error("OpenAI Key が未設定です");
+  const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+KEY},
+    body:JSON.stringify({model:"gpt-4o-mini",temperature:0.2,response_format:{type:"json_object"},messages:[{role:"system",content:DSYS},{role:"user",content:dPrompt(mode,text,ctx)}]})});
+  if(!r.ok){
+    let m="";try{m=(await r.json()).error.message}catch(e){}
+    if(r.status===401)throw new Error("Key が無効です（401）");
+    if(r.status===429)throw new Error(/quota|billing/i.test(m)?"クレジットが足りません":"リクエストが多すぎます。少し待ってください");
+    throw new Error("エラー "+r.status+(m?"："+m.slice(0,80):""));
+  }
+  const j=await r.json();
+  const d=JSON.parse(j.choices[0].message.content);
+  DICT[key]=d;dictSave();return d;
+}
+function closeDict(){const s=$("#dict");if(s)s.remove()}
+function dictShell(inner){
+  closeDict();
+  const el=document.createElement("div");el.className="sheet";el.id="dict";
+  el.innerHTML=`<div class="in dk">${inner}</div>`;
+  el.addEventListener("click",e=>{if(e.target===el)closeDict()});
+  document.body.appendChild(el);return el;
+}
+const sayBtn=t=>`<button class="sb" data-act="say" data-t="${esc(t)}" style="margin-left:6px">🔊</button>`;
+function wordCard(d){
+  const saved=(S.words||[]).some(x=>x.w===d.word);
+  return `<div class="top"><span class="big">${esc(d.word)}</span><span class="rd">${esc(d.reading||"")}</span>${sayBtn(d.word)}<span class="lv">${esc(d.jlpt||"")}</span></div>
+  <div class="pos">${esc(d.pos||"")}</div>
+  <div class="zh">${esc(d.zh||"")}</div>
+  <div class="ja">${esc(d.ja||"")}</div>
+  <h4>📍 いろいろな場面</h4>
+  ${(d.usages||[]).map(u=>`<div class="us"><small>${esc(u.scene||"")}</small> ${sayBtn(u.ja||"")}<br>${tapWrap(u.ja||"")}<i>${esc(u.zh||"")}</i></div>`).join("")}
+  ${d.nuance?`<h4>💡 語感・注意</h4><div class="nt">${esc(d.nuance)}</div>`:""}
+  ${(d.similar&&d.similar.length)?`<h4>↔ 似ている語</h4>${d.similar.map(s=>`<div class="nt"><b class="tw" data-act="word" data-w="${esc(s.w)}" data-c="">${esc(s.w)}</b>：${esc(s.diff||"")}</div>`).join("")}`:""}
+  <div class="acts"><button class="btn ghost" data-act="dsave" data-w="${esc(d.word)}" data-r="${esc(d.reading||"")}" data-z="${esc(d.zh||"")}" data-l="${esc(d.jlpt||"")}">${saved?"★ 保存済み":"☆ 単語帳に保存"}</button><button class="btn" data-act="dclose">閉じる</button></div>`;
+}
+function sentCard(d,text){
+  return `<div class="top"><span class="rd" style="font-size:12px">${esc(d.register||"")}</span></div>
+  <div class="ja" style="font-size:16px;margin-top:6px">${tapWrap(text)}${sayBtn(text)}</div>
+  <div class="zh">${esc(d.zh||"")}</div>
+  <h4>🧩 文型</h4>${(d.grammar||[]).map(g=>`<div class="us"><b>${esc(g.pattern||"")}</b><br>${esc(g.zh||"")}${g.ja?`<i>例：${esc(g.ja)}</i>`:""}</div>`).join("")}
+  <h4>📚 キーワード</h4>${(d.words||[]).map(w=>`<div class="wrow"><div class="t" data-act="word" data-w="${esc(w.w)}" data-c="${esc(text)}"><b>${esc(w.w)}</b> <small style="display:inline">${esc(w.reading||"")}　${esc(w.jlpt||"")}</small><small>${esc(w.zh||"")}</small></div></div>`).join("")}
+  ${d.tip?`<h4>👂 聞き取りのコツ</h4><div class="nt">${esc(d.tip)}</div>`:""}
+  <div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`;
+}
+async function openDict(mode,text,ctx){
+  dictShell(`<div class="load">🔎 「${esc(mode==="w"?text:text.slice(0,12)+"…")}」を調べています…</div>`);
+  try{
+    const d=await askDict(mode,text,ctx);
+    const el=$("#dict");if(!el)return;
+    el.querySelector(".in").innerHTML=mode==="w"?wordCard(d):sentCard(d,text);
+  }catch(e){
+    const el=$("#dict");if(!el)return;
+    el.querySelector(".in").innerHTML=`<div class="load">⚠ ${esc(e.message)}</div><div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`;
+  }
+}
+function openWordList(){
+  const ws=S.words||[];
+  dictShell(`<h3>📖 単語帳 (${ws.length})</h3>`+(ws.length?ws.map((x,i)=>`<div class="wrow"><div class="t" data-act="wopen" data-w="${esc(x.w)}"><b>${esc(x.w)}</b> <small style="display:inline">${esc(x.reading||"")}　${esc(x.jlpt||"")}</small><small>${esc(x.zh||"")}</small></div><button class="sb" data-act="wdel" data-i="${i}">削除</button></div>`).join(""):`<div class="load">まだありません。<br>答えたあと、文の中の単語をタップして「☆ 単語帳に保存」できます。</div>`)+`<div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`);
+}
+
 /* ---------- 事件 ---------- */
 const H={
+  word(el){openDict("w",el.dataset.w,el.dataset.c||"")},
+  sent(el){openDict("s",el.dataset.c,"")},
+  dclose(){closeDict()},
+  dsave(el){
+    S.words=S.words||[];const w=el.dataset.w,i=S.words.findIndex(x=>x.w===w);
+    if(i>=0){S.words.splice(i,1);el.textContent="☆ 単語帳に保存"}
+    else{S.words.push({w,reading:el.dataset.r,zh:el.dataset.z,jlpt:el.dataset.l});el.textContent="★ 保存済み"}
+    save();
+  },
+  words(){openWordList()},
+  wopen(el){openDict("w",el.dataset.w,"")},
+  wdel(el){S.words.splice(+el.dataset.i,1);save();openWordList()},
+  say(el){kick();const my=++playToken;stopSrc();playParts([{v:"F",t:el.dataset.t,gap:0}],curLv,my).catch(e=>toast(e.message==="NEEDGESTURE"?"もう一度タップしてください":e.message,4000))},
   start(){const v=$("#keyin").value.trim();if(!v.startsWith("sk-")){toast("OpenAI Key は sk- で始まります");return}KEY=v;LS.set("jq_key",KEY);touchDay();kick();renderHome()},
   lv(el){curLv=el.dataset.lv;LS.set("jq_lv",curLv);renderHome()},
   stage(el){kick();startStage(el.dataset.id)},
