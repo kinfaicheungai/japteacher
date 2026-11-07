@@ -2,1025 +2,604 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1226">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>日本語先生</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>聴解クエスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
-
-:root {
-  --ink:    #1a1a2e;
-  --paper:  #f7f4ee;
-  --warm:   #f0ebe0;
-  --border: #ddd8cc;
-  --accent: #c0392b;
-  --accent2: #2c7a4b;
-  --gold:   #b8860b;
-  --gold-l: #f5e6a3;
-  --muted:  #7a7570;
-  --dim:    #a09890;
-  --surface: #ffffff;
-  --shadow: 0 4px 24px rgba(26,26,46,0.10);
-  --radius: 14px;
-  --safe-b: env(safe-area-inset-bottom, 0px);
+:root{
+  --bg:#0e1226; --bg2:#151b38; --card:#1b2246; --card2:#232b57; --line:#2f3868;
+  --gold:#f2c14e; --verm:#ef5b45; --sakura:#f4a6c0; --ice:#9fd3ff; --mint:#74e0b2;
+  --text:#f3efe6; --mute:#9aa3c7; --ac:#f4a6c0;
+  --serif:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif;
+  --sans:'Zen Kaku Gothic New','Hiragino Sans','Noto Sans JP','PingFang TC',sans-serif;
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-body {
-  font-family: 'Noto Sans JP', sans-serif;
-  background: var(--paper);
-  color: var(--ink);
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--sans);color:var(--text);background:var(--bg);
+  background-image:
+    radial-gradient(1px 1px at 20% 15%,#fff8 50%,transparent 51%),
+    radial-gradient(1px 1px at 70% 8%,#fff6 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 85% 30%,#fff7 50%,transparent 51%),
+    radial-gradient(1px 1px at 40% 40%,#fff5 50%,transparent 51%),
+    radial-gradient(ellipse at 50% -10%,#2b3570 0%,transparent 60%);
+  background-attachment:fixed;
+  -webkit-text-size-adjust:100%;
 }
+#app{max-width:520px;margin:0 auto;min-height:100dvh;padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom))}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:13px 20px;border-radius:14px;background:var(--gold);color:#241a05;font-weight:700;font-size:15px;box-shadow:0 4px 0 #b88a1d;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b88a1d}
+.btn.ghost{background:var(--card2);color:var(--text);box-shadow:0 4px 0 #141a3a}
+.btn.ghost:active{box-shadow:0 1px 0 #141a3a}
+.btn.block{display:flex;width:100%}
+.btn[disabled]{opacity:.5;pointer-events:none}
+h1,h2,h3{font-family:var(--serif)}
+small{color:var(--mute)}
 
-/* ════ SETUP ════ */
-#setup {
-  position: fixed; inset: 0; z-index: 200;
-  background: var(--ink);
-  display: flex; align-items: flex-start; justify-content: center;
-  padding: 1.5rem; overflow-y: auto;
-}
+/* setup */
+.setup{padding-top:9vh;text-align:center}
+.logo{font-family:var(--serif);font-weight:800;font-size:44px;letter-spacing:.06em;line-height:1.1}
+.logo b{color:var(--ac);font-weight:800}
+.tag{color:var(--mute);font-size:12px;letter-spacing:.3em;margin:8px 0 28px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;text-align:left}
+.panel label{display:block;font-size:12px;color:var(--mute);letter-spacing:.08em;margin-bottom:6px}
+.inp{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:15px;font-family:ui-monospace,Menlo,monospace;outline:none}
+.inp:focus{border-color:var(--gold)}
+.hint{font-size:12px;color:var(--mute);line-height:1.7;margin:8px 0 16px}
+.hint a{color:var(--gold)}
 
-.setup-wrap { width: 100%; max-width: 440px; padding-bottom: 2rem; }
+/* home */
+.hd{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
+.brand{font-family:var(--serif);font-weight:800;font-size:22px;letter-spacing:.05em}
+.brand b{color:var(--ac)}
+.chips{display:flex;gap:6px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700}
+.rank{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.rank .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}
+.rank .row b{font-family:var(--serif);font-size:17px}
+.bar{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--verm));border-radius:99px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.tab{padding:11px 0;border-radius:14px;background:var(--card);border:2px solid var(--line);font-family:var(--serif);font-weight:800;font-size:18px;color:var(--mute)}
+.tab.on{border-color:var(--ac);color:var(--ac);background:var(--card2)}
+.world{position:relative;border-radius:20px;overflow:hidden;height:140px;margin-bottom:16px;border:1px solid var(--line);background:var(--card)}
+.world svg,.world img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.world .cap{position:absolute;left:0;right:0;bottom:0;padding:26px 16px 10px;background:linear-gradient(transparent,#0b0f24e6)}
+.world .cap h2{font-size:24px;letter-spacing:.06em}
+.world .cap small{color:#d6dbf5}
+.path{display:flex;flex-direction:column;gap:10px;position:relative}
+.stage{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:left;width:100%;transition:transform .08s}
+.stage:active{transform:scale(.985)}
+.stage .node{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:var(--bg);border:2px solid var(--ac)}
+.stage .si{flex:1;min-width:0}
+.stage .si b{display:block;font-family:var(--serif);font-size:17px}
+.stage .si small{font-size:12px}
+.stage .st{font-size:16px;letter-spacing:2px;color:var(--gold);white-space:nowrap}
+.stage.boss{background:linear-gradient(135deg,#3a1b2c,#2b1f4a);border-color:var(--verm)}
+.stage.boss .node{border-color:var(--verm);background:#2a0f1a}
+.stage.done .node{background:var(--ac);color:#1a1230}
+.sub{display:flex;gap:10px;margin-top:16px}
+.sub .btn{flex:1;font-size:14px}
 
-.setup-logo {
-  text-align: center;
-  padding: 2.5rem 0 2rem;
-}
+/* quiz */
+.qtop{display:flex;align-items:center;gap:10px;padding:14px 0 8px}
+.x{width:36px;height:36px;border-radius:50%;background:var(--card);font-size:16px}
+.dots{flex:1;display:flex;gap:4px}
+.dots i{flex:1;height:8px;border-radius:99px;background:var(--card2)}
+.dots i.ok{background:var(--mint)} .dots i.ng{background:var(--verm)} .dots i.cur{background:var(--gold)}
+.hearts{font-size:15px;letter-spacing:1px;white-space:nowrap}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;text-align:center;margin-top:6px}
+.qtype{display:inline-block;padding:4px 12px;border-radius:99px;background:var(--bg);font-size:13px;font-weight:700;margin-bottom:12px}
+.qtype small{margin-left:6px}
+.sit{font-size:15px;line-height:1.8;margin:2px 0 12px;padding:10px 12px;background:var(--bg);border-radius:12px;text-align:left}
+.pbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:18px;background:var(--ac);color:#1a1230;font-weight:800;font-size:17px;box-shadow:0 5px 0 #0003}
+.pbtn:active{transform:translateY(3px)}
+.pbtn[disabled]{opacity:.55;pointer-events:none}
+.wave{display:flex;gap:4px;justify-content:center;align-items:center;height:30px;margin:12px 0 4px}
+.wave i{width:5px;height:8px;border-radius:3px;background:var(--mute);opacity:.5}
+.wave.on i{background:var(--ac);opacity:1;animation:wv .9s ease-in-out infinite}
+.wave.on i:nth-child(2n){animation-delay:.15s}.wave.on i:nth-child(3n){animation-delay:.3s}.wave.on i:nth-child(5n){animation-delay:.45s}
+@keyframes wv{0%,100%{height:6px}50%{height:28px}}
+.astat{font-size:13px;color:var(--mute);min-height:20px}
+.astat.err{color:#ff9d8f}
+.qtext{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--bg);font-size:15px;line-height:1.7;text-align:left}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.opt{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:var(--card);border:2px solid var(--line);text-align:left;font-size:16px;line-height:1.5;transition:transform .08s}
+.opt:active{transform:scale(.985)}
+.opt b{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--bg);font-family:var(--serif);font-size:15px}
+.opt.ok{border-color:var(--mint);background:#143a37}
+.opt.ng{border-color:var(--verm);background:#40182a}
+.opt.dim{opacity:.55}
+.opt.lock{pointer-events:none}
+.fb{margin-top:16px;border-radius:20px;padding:16px;border:1px solid var(--line);background:var(--card);animation:up .25s ease}
+.fb.ok{border-color:var(--mint)} .fb.ng{border-color:var(--verm)}
+@keyframes up{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.fbh{font-family:var(--serif);font-weight:800;font-size:20px}
+.fba{margin:6px 0 10px;font-size:15px}
+.script{background:var(--bg);border-radius:14px;padding:10px 12px;margin:8px 0;font-size:14px;line-height:1.75}
+.sl{display:flex;gap:8px;align-items:baseline;margin:3px 0}
+.sl i{flex:none;font-style:normal;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;min-width:34px;text-align:center}
+.sl i.f{background:#5a2b4a;color:#ffc6de} .sl i.m{background:#23406b;color:#bfe0ff} .sl i.n{background:#3d3a2a;color:#ffe9a8}
+.exp{font-size:14px;line-height:1.75;color:#dfe3f7;margin:8px 0 14px}
+.fbb{display:flex;gap:10px}.fbb .btn{flex:1;font-size:14px;padding:12px 8px}
 
-.logo-kanji {
-  font-family: 'Noto Serif JP', serif;
-  font-size: 3.5rem;
-  color: var(--gold-l);
-  line-height: 1;
-  letter-spacing: 0.1em;
-}
+/* result */
+.res{text-align:center;padding-top:8vh}
+.res .big{font-size:56px;letter-spacing:6px;color:var(--gold)}
+.res h2{font-size:30px;margin:8px 0}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.stat div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 4px}
+.stat b{display:block;font-family:var(--serif);font-size:22px}
+.stat small{font-size:11px}
+.res .btn{margin-top:10px}
 
-.logo-en {
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
-  margin-top: 0.5rem;
-}
-
-.setup-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--radius);
-  padding: 1.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.s-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 0.45rem;
-  display: block;
-}
-
-.s-row { display: flex; gap: 0.5rem; align-items: center; }
-
-.s-input {
-  flex: 1;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  color: white;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.82rem;
-  outline: none;
-  transition: border-color 0.2s;
-  min-width: 0;
-}
-.s-input:focus { border-color: var(--gold-l); }
-.s-input::placeholder { color: rgba(255,255,255,0.25); font-size: 0.78rem; }
-
-.eye-btn {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  width: 38px; height: 38px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: rgba(255,255,255,0.4); font-size: 1rem;
-  flex-shrink: 0; transition: color 0.15s;
-}
-.eye-btn:hover { color: white; }
-
-.s-hint {
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.3);
-  margin-top: 0.3rem;
-  line-height: 1.5;
-}
-.s-hint a { color: var(--gold-l); text-decoration: none; }
-
-.s-saved { font-size: 0.7rem; color: #7fff9e; margin-top: 0.3rem; display: none; }
-
-.s-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); }
-
-.s-toggle-row {
-  display: flex; align-items: center; justify-content: space-between;
-}
-.s-toggle-label { font-size: 0.88rem; color: rgba(255,255,255,0.6); }
-
-.toggle { position: relative; width: 44px; height: 24px; }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.t-slider {
-  position: absolute; inset: 0;
-  background: rgba(255,255,255,0.15);
-  border-radius: 24px; cursor: pointer; transition: background 0.2s;
-}
-.t-slider:before {
-  content: ''; position: absolute;
-  width: 18px; height: 18px; left: 3px; top: 3px;
-  background: white; border-radius: 50%; transition: transform 0.2s;
-}
-.toggle input:checked + .t-slider { background: var(--gold); }
-.toggle input:checked + .t-slider:before { transform: translateX(20px); }
-
-.btn-go {
-  width: 100%; padding: 1rem;
-  background: var(--gold-l); color: var(--ink);
-  border: none; border-radius: 10px;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 1rem; font-weight: 500; cursor: pointer;
-  letter-spacing: 0.05em;
-  transition: opacity 0.15s, transform 0.1s;
-}
-.btn-go:hover { opacity: 0.9; transform: translateY(-1px); }
-.btn-go:active { transform: translateY(0); }
-
-/* ════ APP ════ */
-#app { display: none; flex-direction: column; height: 100dvh; }
-#app.active { display: flex; }
-
-/* Header */
-.app-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.7rem 1.1rem;
-  padding-top: max(0.7rem, env(safe-area-inset-top));
-  background: var(--ink);
-  flex-shrink: 0;
-}
-
-.app-bar-logo {
-  font-family: 'Noto Serif JP', serif;
-  font-size: 1.2rem;
-  color: var(--gold-l);
-  letter-spacing: 0.08em;
-}
-
-.app-bar-right { display: flex; gap: 0.5rem; align-items: center; }
-
-.bar-btn {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: rgba(255,255,255,0.5); font-size: 0.95rem;
-  transition: all 0.15s;
-}
-.bar-btn:hover { color: white; border-color: rgba(255,255,255,0.3); }
-.bar-btn.on { color: var(--gold-l); border-color: rgba(248,230,163,0.4); }
-
-.level-badge {
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  background: rgba(184,134,11,0.2);
-  color: var(--gold-l);
-  border: 1px solid rgba(184,134,11,0.3);
-}
-
-/* Chat feed */
-.feed {
-  flex: 1; overflow-y: auto;
-  padding: 1rem;
-  display: flex; flex-direction: column; gap: 0.9rem;
-  overscroll-behavior: contain;
-  background: var(--warm);
-}
-.feed::-webkit-scrollbar { width: 3px; }
-.feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-/* Message bubbles */
-.msg { display: flex; gap: 0.6rem; animation: msgIn 0.28s ease; }
-@keyframes msgIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.msg.sensei { align-self: flex-start; max-width: 88%; }
-.msg.user   { align-self: flex-end;   max-width: 88%; flex-direction: row-reverse; }
-
-.avatar {
-  width: 32px; height: 32px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Noto Serif JP', serif;
-  font-size: 0.9rem; flex-shrink: 0; margin-top: 2px;
-}
-.avatar.s { background: var(--ink); color: var(--gold-l); }
-.avatar.u { background: var(--accent2); color: white; font-size: 0.7rem; font-family: 'Noto Sans JP', sans-serif; }
-
-.bubble-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
-
-.bubble {
-  padding: 0.75rem 1rem;
-  border-radius: 16px;
-  font-size: 0.93rem;
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
-.msg.sensei .bubble {
-  background: var(--surface);
-  color: var(--ink);
-  border-radius: 4px 16px 16px 16px;
-  box-shadow: var(--shadow);
-}
-
-.msg.user .bubble {
-  background: var(--ink);
-  color: #f0ebe0;
-  border-radius: 16px 4px 16px 16px;
-}
-
-/* Correction box */
-.correction {
-  background: #fff8e6;
-  border: 1px solid #e8c84a;
-  border-radius: 10px;
-  padding: 0.6rem 0.85rem;
-  font-size: 0.82rem;
-  line-height: 1.65;
-  color: #5a4a00;
-}
-.correction-title {
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold);
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-}
-
-/* Play button on bubble */
-.bubble-play {
-  align-self: flex-start;
-  background: none; border: none;
-  font-size: 0.82rem; color: var(--muted);
-  cursor: pointer; padding: 0; line-height: 1;
-  transition: color 0.15s;
-}
-.bubble-play:hover { color: var(--accent2); }
-.bubble-play.playing { color: var(--accent2); animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-/* Furigana */
-ruby rt { font-size: 0.55em; color: var(--muted); }
-
-/* Thinking */
-.thinking {
-  display: flex; gap: 4px; align-items: center;
-  padding: 0.75rem 1rem;
-  background: var(--surface);
-  border-radius: 4px 16px 16px 16px;
-  box-shadow: var(--shadow);
-}
-.t-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--muted);
-  animation: bounce 1.2s infinite;
-}
-.t-dot:nth-child(2) { animation-delay: 0.18s; }
-.t-dot:nth-child(3) { animation-delay: 0.36s; }
-@keyframes bounce {
-  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-5px); opacity: 1; }
-}
-
-/* Status bar */
-.status-bar {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.5rem 1rem;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0; min-height: 40px;
-}
-.status-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--dim); flex-shrink: 0; transition: background 0.2s;
-}
-.status-dot.rec  { background: #e74c3c; animation: recDot 1s infinite; }
-.status-dot.proc { background: #3498db; animation: recDot 1s infinite; }
-.status-dot.play { background: var(--accent2); animation: recDot 1s infinite; }
-@keyframes recDot { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-.status-text { flex: 1; font-size: 0.8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* Bottom controls */
-.bottom {
-  display: flex; align-items: center; justify-content: space-around;
-  padding: 0.9rem 1rem;
-  padding-bottom: max(0.9rem, var(--safe-b));
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0; gap: 0.5rem;
-}
-
-.b-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
-  background: none; border: none; cursor: pointer;
-  color: var(--muted); font-family: 'Noto Sans JP', sans-serif;
-  transition: color 0.15s; padding: 0.3rem 1rem; border-radius: 10px;
-}
-.b-btn:hover { color: var(--ink); }
-.b-btn.danger:hover { color: var(--accent); }
-.b-icon { font-size: 1.3rem; line-height: 1; }
-.b-label { font-size: 0.58rem; letter-spacing: 0.06em; }
-
-/* BIG MIC BUTTON */
-.mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
-
-.mic-btn {
-  width: 72px; height: 72px; border-radius: 50%;
-  border: 3px solid var(--border);
-  background: var(--paper);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.8rem;
-  transition: all 0.2s; position: relative;
-}
-.mic-btn:hover { border-color: var(--ink); }
-.mic-btn.recording {
-  border-color: #e74c3c;
-  background: #fff0ee;
-  animation: micPulse 1.2s infinite;
-}
-.mic-btn.disabled { opacity: 0.4; cursor: not-allowed; }
-@keyframes micPulse {
-  0%  { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
-  70% { box-shadow: 0 0 0 14px rgba(231,76,60,0); }
-  100%{ box-shadow: 0 0 0 0 rgba(231,76,60,0); }
-}
-
-.mic-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.08em; }
-
-/* Toast */
-.toast {
-  position: fixed; top: 1rem; left: 50%;
-  transform: translateX(-50%) translateY(-60px);
-  background: var(--ink); color: #f0ebe0;
-  border-radius: 8px; padding: 0.55rem 1.1rem;
-  font-size: 0.82rem; z-index: 400;
-  transition: transform 0.25s ease; white-space: nowrap; pointer-events: none;
-}
-.toast.show { transform: translateX(-50%) translateY(0); }
-.toast.ok  { background: var(--accent2); }
-.toast.err { background: var(--accent); }
-
-/* Empty */
-.empty-feed {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  flex: 1; color: var(--dim); text-align: center; gap: 0.8rem; padding: 2rem;
-}
-.empty-kanji { font-family: 'Noto Serif JP', serif; font-size: 3rem; opacity: 0.2; }
-.empty-text { font-size: 0.85rem; line-height: 1.7; max-width: 260px; }
+/* sheet */
+.sheet{position:fixed;inset:0;background:#05081acc;display:flex;align-items:flex-end;justify-content:center;z-index:50;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet .in{width:100%;max-width:520px;max-height:88dvh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom))}
+.sheet h3{font-size:20px;margin-bottom:12px}
+.row2{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row2 small{display:block;font-size:12px;margin-top:2px}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:2px;flex:none}
+.seg button{padding:7px 12px;border-radius:9px;font-size:13px;color:var(--mute);font-weight:700}
+.seg button.on{background:var(--gold);color:#241a05}
+.tip{font-size:12px;color:var(--mute);line-height:1.7;margin-top:12px}
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-90px);background:#000d;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:13px;z-index:99;transition:transform .25s;max-width:90vw;text-align:center}
+#toast.show{transform:translate(-50%,0)}
 </style>
 </head>
 <body>
-
-<!-- ══ SETUP ══ -->
-<div id="setup">
-<div class="setup-wrap">
-  <div class="setup-logo">
-    <div class="logo-kanji">日本語先生</div>
-    <div class="logo-en">Marugoto B1 · AI Voice Teacher</div>
-  </div>
-
-  <div class="setup-card">
-    <div>
-      <span class="s-label">OpenAI API Key（語音識別 + 老師聲音）</span>
-      <div class="s-row">
-        <input class="s-input" type="password" id="oai" placeholder="sk-..." autocomplete="off">
-        <button class="eye-btn" onclick="eye('oai',this)">👁</button>
-      </div>
-      <div class="s-hint"><a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a> 取得。Whisper語音識別 + TTS-1-HD老師聲音。</div>
-      <div class="s-saved" id="oai-ok">✓ 已記住</div>
-    </div>
-
-    <div>
-      <span class="s-label">Anthropic API Key（Claude 老師大腦）</span>
-      <div class="s-row">
-        <input class="s-input" type="password" id="ant" placeholder="sk-ant-..." autocomplete="off">
-        <button class="eye-btn" onclick="eye('ant',this)">👁</button>
-      </div>
-      <div class="s-hint">你的 Claude credit，負責教學、糾正、對話。</div>
-      <div class="s-saved" id="ant-ok">✓ 已記住</div>
-    </div>
-
-    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08)">
-
-    <div>
-      <span class="s-label" style="margin-bottom:0.8rem;display:block">你的名字（老師怎麼叫你）</span>
-      <input class="s-input" type="text" id="username" placeholder="例：ティム / Tim" style="width:100%">
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:0.7rem">
-      <div class="s-toggle-row">
-        <span class="s-toggle-label">💾 記住 Key（本機）</span>
-        <label class="toggle"><input type="checkbox" id="save-k" checked><span class="t-slider"></span></label>
-      </div>
-      <div class="s-toggle-row">
-        <span class="s-toggle-label">🔊 自動播放老師聲音</span>
-        <label class="toggle"><input type="checkbox" id="auto-play" checked><span class="t-slider"></span></label>
-      </div>
-      <div class="s-toggle-row">
-        <span class="s-toggle-label">📝 顯示文字（同時看字）</span>
-        <label class="toggle"><input type="checkbox" id="show-text" checked><span class="t-slider"></span></label>
-      </div>
-    </div>
-
-    <button class="btn-go" onclick="launch()">授業を始めましょう →</button>
-  </div>
-</div>
-</div>
-
-<!-- ══ APP ══ -->
-<div id="app">
-  <div class="app-bar">
-    <div class="app-bar-logo">日本語先生</div>
-    <div class="app-bar-right">
-      <span class="level-badge">B1 · N3</span>
-      <button class="bar-btn on" id="btn-sound" onclick="toggleSound()" title="老師聲音">🔊</button>
-      <button class="bar-btn on" id="btn-text"  onclick="toggleText()"  title="顯示文字">📝</button>
-      <button class="bar-btn" onclick="goSetup()" title="設定">⚙️</button>
-    </div>
-  </div>
-
-  <div class="feed" id="feed">
-    <div class="empty-feed" id="empty">
-      <div class="empty-kanji">先</div>
-      <div class="empty-text">マイクボタンを押して<br>先生と話しましょう<br><br>老師會用日語帶你上課<br>你可以日語或中文回答</div>
-    </div>
-  </div>
-
-  <div class="status-bar">
-    <div class="status-dot" id="s-dot"></div>
-    <div class="status-text" id="s-txt">準備完了</div>
-  </div>
-
-  <div class="bottom">
-    <button class="b-btn danger" onclick="clearChat()">
-      <span class="b-icon">🗑</span>
-      <span class="b-label">クリア</span>
-    </button>
-
-    <div class="mic-wrap">
-      <button class="mic-btn" id="mic-btn" onclick="tapMic()">
-        <span id="mic-icon">🎙</span>
-      </button>
-      <div class="mic-label" id="mic-label">話してください</div>
-    </div>
-
-    <button class="b-btn" onclick="stopAudio()" title="停止">
-      <span class="b-icon">⏹</span>
-      <span class="b-label">停止</span>
-    </button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<div id="app"></div>
+<div id="toast"></div>
 <script>
-'use strict';
+"use strict";
+/* ============================================================
+   聴解クエスト — JLPT 聽力闖關遊戲
+   題庫為原創題（依官方題型設計），音聲由 OpenAI TTS 即時生成並快取
+   ============================================================ */
 
-// ── STATE ──
-let oaiKey='', antKey='', userName='ティム';
-let audioCtx = null;
-let autoPlay=true, showText=true;
-let isRecording=false, isBusy=false;
-let mediaRecorder=null, audioChunks=[], mediaStream=null;
-let currentAudio=null;
-let history=[];   // [{role,content}]
-let sessionStarted=false;
+/* ---------- 題庫 ---------- */
+const Q=[];
+const add=(lv,type,o)=>Q.push(Object.assign({id:lv+"-"+type+"-"+(Q.filter(q=>q.lv===lv&&q.type===type).length+1),lv,type},o));
 
-// ── CURRICULUM (Marugoto B1 Topic 1 & 2) ──
-const CURRICULUM = `
-【まるごと 中級1 B1 カリキュラム】
+/* ===== N3 ===== */
+add("N3","quick",{lines:[["M","すみません、この席、空いていますか。"]],rv:"F",opts:["ええ、どうぞ。","はい、ここにいました。","いいえ、空いていました。"],ans:0,exp:"「空いていますか」是問座位有沒有人，自然的回答是「ええ、どうぞ」。其他選項的時態和意思都不對。"});
+add("N3","quick",{lines:[["F","お先に失礼します。"]],rv:"M",opts:["お疲れさまでした。","いらっしゃいませ。","お待たせしました。"],ans:0,exp:"「お先に失礼します」是比同事早下班時說的話，對方會回「お疲れさまでした」。"});
+add("N3","quick",{lines:[["M","資料、明日までに送ってもらえませんか。"]],rv:"F",opts:["はい、今日中にお送りします。","いえ、もらえませんでした。","ええ、送ってあげます。"],ans:0,exp:"「〜てもらえませんか」是禮貌的請求。「お送りします」是謙讓語，最自然；對請求你的人說「あげます」很失禮。"});
+add("N3","quick",{lines:[["F","この間貸した本、もう読んだ？"]],rv:"M",opts:["ごめん、まだ読み終わってないんだ。","うん、貸してあげたよ。","ううん、読んでもらったよ。"],ans:0,exp:"對方問「もう読んだ？」，還沒讀完就說「まだ読み終わってない」。其他選項把借出／借入的關係弄反了。"});
 
-■ トピック1「はじめての人と」
-Can-do:
-- PART1: まとまりのある自己紹介を聞いて理解できる
-- PART2: 知らない人に話しかけて質問したり自分のことを話したりできる（尊敬語含む）
-- PART3: プロフィール・希望・抱負を含む自己紹介ができる
-- PART4: SNSプロフィールを読んで理解できる
-- PART5: SNSの自己紹介文を書ける
+add("N3","task",{intro:"会社で、女の人と男の人が話しています。",lines:[["F","田中さん、明日の会議の資料、もう準備できた？"],["M","はい、コピーは終わっています。あとは、会議室の予約だけです。"],["F","あ、会議室ならもう私が予約しておいたよ。それより、お客さんに送る案内メールが、まだじゃない？"],["M","あっ、そうでした。すぐ送ります。"]],ask:"男の人は、このあと、まず何をしますか。",opts:["資料をコピーする","会議室を予約する","お客さんにメールを送る","会議の資料を作る"],ans:2,exp:"資料影印「終わっています」；會議室女的說「予約しておいた」。還沒做的是給客人的通知郵件，所以「すぐ送ります」。"});
+add("N3","task",{intro:"家で、お母さんと息子が話しています。",lines:[["F2","たけし、これから買い物に行くけど、何か必要なものある？"],["M2","うーん、牛乳がなくなりそうだったかな。あと、パンも。"],["F2","牛乳はまだ半分あるから大丈夫よ。パンは買ってくるね。"],["M2","じゃあ、ついでに卵も買ってきて。"],["F2","卵はこの前買ったでしょ。じゃあ、パンだけね。"]],ask:"お母さんは、何を買ってきますか。",opts:["牛乳とパン","パンと卵","パンだけ","牛乳だけ"],ans:2,exp:"牛奶還有一半、雞蛋前幾天買過，最後的結論是「パンだけ」。對話裡會有反覆，要聽到最後。"});
+add("N3","task",{intro:"旅行の準備について、男の人と女の人が話しています。",lines:[["M","来週の旅行のホテル、予約しておいたよ。"],["F","ありがとう。電車の切符は？"],["M","それはまだ。ネットで予約できるって聞いたけど、やり方がわからなくて。"],["F","じゃあ、私がやっておくよ。パスワードを教えて。"],["M","ごめん、パスワードは忘れちゃった。先に再設定しないと…。"],["F","それなら、再設定は私がやるから、メールアドレスだけ教えて。"]],ask:"男の人は、このあと、まず何をしますか。",opts:["切符を予約する","パスワードを再設定する","ホテルを予約する","メールアドレスを教える"],ans:3,exp:"切符和密碼重設都由女的來做；男的只要做一件事：告訴她 e-mail 地址。"});
+add("N3","task",{intro:"病院の受付で、受付の女の人と男の人が話しています。",lines:[["F","次の方、どうぞ。保険証はお持ちですか。"],["M","はい。あ、でも今日は持ってくるのを忘れてしまって…。"],["F","そうですか。では、今日は全額お支払いいただいて、後日、保険証を持ってきていただければ、お返しできますが…。"],["M","わかりました。家は近いので、取ってきます。"],["F","では、その前に、こちらの紙に症状を書いておいてください。"]],ask:"男の人は、まず何をしますか。",opts:["保険証を取りに帰る","紙に症状を書く","全額を支払う","医者に会う"],ans:1,exp:"「取ってきます」是之後的事；女的說「その前に」（在那之前）請他先寫症狀。「まず」要抓順序詞。"});
 
-重要文法:
-- 尊敬語①: いらっしゃいます・なさいます・めしあがります・ごらんになります・おっしゃいます・くださいます
-- 尊敬語②: お＋Vます＋になります（例：お帰りになりますか）
-- Vはじめる: ～年前からまた習いはじめました
-- ～のは～です（強調）: 日本語の勉強を始めたのは3年前です
-- ～ようになりたい: いろいろなことが話せるようになりたい
-- ～ばと思っている / ～といいな
+add("N3","point",{intro:"男の人と女の人が話しています。",lines:[["F","あれ、遅かったね。電車が遅れたの？"],["M","ううん、電車は時間どおりだったんだけど、駅に着いてから財布を忘れたことに気づいて、家まで取りに戻ったんだ。"],["F","それは大変だったね。"]],ask:"男の人は、どうして遅れましたか。",opts:["電車が遅れたから","財布を取りに戻ったから","道に迷ったから","寝坊したから"],ans:1,exp:"先否定「電車は時間どおり」，真正原因是忘了錢包回家拿。聽到「ううん」要小心被否定的選項。"});
+add("N3","point",{intro:"ラーメン屋について、女の人と男の人が話しています。",lines:[["F","このラーメン屋、おすすめだよ。"],["M","へえ、有名なの？"],["F","有名っていうより、値段が安いのにスープがすごくおいしいんだ。ただ、昼は混んでるから、少し遅めに行くのがいいよ。"]],ask:"女の人がこのラーメン屋をすすめる理由は何ですか。",opts:["有名だから","安くておいしいから","空いているから","近いから"],ans:1,exp:"「有名っていうより」＝比起有名，更重要的是「便宜又好喝」。中午會擠，所以不是「空いている」。"});
+add("N3","point",{intro:"会社で、女の人と男の人が話しています。",lines:[["F","山本さん、明日の午後の会議、出られそう？"],["M","それが、午前中の出張が長引きそうで、新幹線が着くのが三時なんです。会議は二時からですよね。"],["F","そうか。じゃあ、途中からになるね。"],["M","はい、できれば資料は先に送っておいてください。"]],ask:"男の人は、どうして会議に遅れますか。",opts:["新幹線が止まるから","出張が長引くから","資料を作るから","体調が悪いから"],ans:1,exp:"「出張が長引きそう」是原因，新幹線三點到只是結果。新幹線並沒有停駛。"});
+add("N3","point",{intro:"不動産屋で、店の男の人とお客さんの女の人が話しています。",lines:[["M","ご希望の条件を教えてください。"],["F","駅から歩いて十分以内で、できれば二階以上がいいです。"],["M","広さはどのくらいで？"],["F","一人暮らしなので、狭くてもかまいません。ただ、ペットが飼えるところがいいんです。"]],ask:"女の人が、部屋について一番必要だと言っているのはどれですか。",opts:["駅から近いこと","二階以上であること","広いこと","ペットが飼えること"],ans:3,exp:"「できれば」是希望而已、「狭くてもかまいません」是不重要；「ただ、〜がいいんです」才是真正的重點條件。"});
 
-重要語彙:
-交流会・参加者・自己紹介・職業・出身・趣味・興味・希望・抱負・ヨガ・和太鼓
-いらっしゃる・なさる・めしあがる・ごらんになる・おっしゃる・くださる
-社交的・広告代理店・定年退職・専業主婦・アマチュアオーケストラ
+add("N3","gist",{intro:"市の図書館の放送です。",lines:[["M","えー、来月から、駅前の市立図書館の利用時間が変わります。今までは夜八時まででしたが、来月からは夜九時まで利用できるようになります。ただし、日曜日は今までどおり、午後五時までです。ぜひ、ご利用ください。"]],ask:"何についての話ですか。",opts:["図書館の利用時間の変更","図書館の新しい本","日曜日の休み","駅前の工事"],ans:0,exp:"重點是圖書館「利用時間の変更」（延長到晚上九點，星期日不變）。"});
+add("N3","gist",{intro:"女の人が話しています。",lines:[["F","私は子どものころから、人前で話すのが苦手でした。でも、大学で友達に誘われて、スピーチのサークルに入ってから、少しずつ平気になりました。今は、仕事で発表するのが楽しみなくらいです。"]],ask:"この人は、どんな話をしていますか。",opts:["話すのが上手になった経験","サークルをやめた理由","仕事が忙しいこと","友達との旅行"],ans:0,exp:"從不擅長說話，到現在期待上台發表——講的是「變得會說話的經驗」。"});
+add("N3","gist",{intro:"ラジオで、天気予報を伝えています。",lines:[["M","明日は、朝のうちは晴れますが、午後から雲が広がり、夕方には雨になるでしょう。傘を持って出かけたほうがよさそうです。気温は今日より少し低くなります。"]],ask:"この話のポイントは何ですか。",opts:["一日中晴れること","午後から天気が悪くなること","気温が上がること","朝から雨が降ること"],ans:1,exp:"上午晴、「午後から」轉陰、傍晚下雨，所以要帶傘。氣溫是比今天低。"});
+add("N3","gist",{intro:"二人が、週末の旅行について話しています。",lines:[["F","週末の旅行、どこにする？ 海か山か。"],["M","山は去年行ったから、今年は海がいいな。"],["F","でも、海は人が多いし、混むよ。"],["M","じゃあ、人が少ない小さな島はどう？"],["F","いいね、そこにしよう。"]],ask:"二人は、どこに行くことにしましたか。",opts:["去年行った山","人が多い海","人が少ない小さな島","近くの公園"],ans:2,exp:"先排除山（去年去過）和人多的海，最後決定「人が少ない小さな島」。"});
 
-会話例（PART2 キャシーと西山）:
-キャシー：あのう、失礼ですが…日本の方ですか？
-西山：あ、はい、そうですけど。
-キャシー：やっぱり。さっき携帯で日本語をお話しになっていたので。
-西山：日本語、できるんですか？
-キャシー：はい。どこで勉強なさっているんですか？
-西山：主婦です。去年の夏に夫が転勤になったので東京から引っ越してきたんです。
+add("N3","utter",{ask:"友達の家に遊びに行きました。帰るとき、何と言いますか。",rv:"F",opts:["お邪魔しました。","いらっしゃいませ。","ただいま。"],ans:0,exp:"到朋友家作客離開時說「お邪魔しました」（打擾了）。「ただいま」是回自己家，「いらっしゃいませ」是接待客人的話。"});
+add("N3","utter",{ask:"友達が、重い荷物を持って歩いています。手伝いたいとき、何と言いますか。",rv:"M",opts:["持ちましょうか。","持ってください。","持たせてもらいます。"],ans:0,exp:"主動提議幫忙用「〜ましょうか」（我來拿吧）。「持ってください」是請對方拿。"});
+add("N3","utter",{ask:"店で買った服のサイズが合いません。店員に、もう少し大きいサイズに替えてもらいたいとき、何と言いますか。",rv:"F",opts:["すみません、これ、もう少し大きいのと替えていただけますか。","すみません、これ、もう少し大きいのを買ってあげますか。","すみません、これ、もう少し大きくなりますか。"],ans:0,exp:"「〜ていただけますか」是客氣地請對方替自己做事。其他兩項文法或意思不通。"});
+add("N3","utter",{ask:"会議で、ほかの人の意見と少し違う考えがあります。自分の意見を言うとき、何と言いますか。",rv:"M",opts:["それはそうかもしれませんが、私は少し違うと思います。","それはぜんぜんだめです。","私の意見はどうでもいいです。"],ans:0,exp:"表達不同意見時，先說「それはそうかもしれませんが」再提出自己的看法，最委婉有禮。"});
 
-■ トピック2「おすすめの料理」
-Can-do:
-- PART1: レストランの紹介を聞いて味・値段などの情報が理解できる
-- PART2: 料理の材料について話し合いながら買い物ができる
-- PART3: 自分の国の料理の特徴・作り方をわかりやすく説明できる
-- PART4: 料理のレシピを読んで材料・作り方・注意点が理解できる
-- PART5: 料理の作り方のメモを書ける
+/* ===== N2 ===== */
+add("N2","quick",{lines:[["M","この企画、もう少し検討したほうがいいんじゃないかな。"]],rv:"F",opts:["そうですね。もう一度、見直してみます。","いいえ、検討はしませんでした。","はい、検討させられました。"],ans:0,exp:"「〜んじゃないかな」是委婉的建議。順著建議回答「見直してみます」最自然。"});
+add("N2","quick",{lines:[["F","昨日の試合、見ましたか。"]],rv:"M",opts:["いえ、残業で見られなかったんです。","ええ、これから見るところです。","いえ、見ることになっていません。"],ans:0,exp:"「見られなかった」（沒能看到）配上原因「残業で」。「これから見る」時間不符，「見ることになっていません」意思不通。"});
+add("N2","quick",{lines:[["M","すみません、この書類、今日中にお願いできないでしょうか。"]],rv:"F",opts:["承知しました。何とか間に合わせます。","ええ、今日中ではありませんでした。","お願いしないでください。"],ans:0,exp:"「〜できないでしょうか」是很客氣的請求。回答「承知しました」是接受委託。"});
 
-重要文法:
-- ～みたいだ: うーん、ないみたいですね（推測）
-- ～でしょうか: どれがいいでしょうか（丁寧な疑問）
-- 疑問詞＋Vばいい: どうやって使えばいいんですか
-- 連用中止: じゃがいもの皮をむき、切り、ゆでる
-- Vたあと: 少し冷ましたあと、よくつぶす
-- Vておく: キャベツは千切りにしておく
-- 自動詞・他動詞: 固まる（自）/ 固める（他）
-- Vてくる: 固まってきたら裏返す
+add("N2","task",{intro:"会社で、女の人と部長が、出張の準備について話しています。",lines:[["F","部長、来週の出張なんですが、新幹線と飛行機、どちらにしましょうか。"],["M","うーん、飛行機のほうが早いけど、空港までが遠いからなあ。"],["F","そうですね。新幹線なら駅から会場まで歩けますし、料金もほぼ同じです。"],["M","じゃあ、新幹線にしよう。ただ、帰りは会議が長引くかもしれないから、帰りの切符は時間を決めずに取ってくれる？"],["F","わかりました。いつでも乗れる切符ですね。では、手配しておきます。"]],ask:"女の人は、このあと、まず何をしますか。",opts:["飛行機の予約をする","新幹線の往復の切符を手配する","会場までの道を調べる","部長に日程を確認する"],ans:1,exp:"交通方式已決定為新幹線，女的最後說「手配しておきます」。回程要買不指定時間的票。"});
+add("N2","task",{intro:"大学で、先生と女の学生が話しています。",lines:[["F","先生、レポートの提出のことなんですが、締め切りを少し延ばしていただけませんか。"],["M","どうして？"],["F","実は、調査に協力してくれる予定だった会社から、急にお断りされてしまって。"],["M","それは困ったね。でも、延ばすのは一週間までだよ。他の会社を探すより、図書館の統計データを使うほうが早いんじゃないかな。"],["F","わかりました。じゃあ、まず先生がおっしゃったデータがあるか、図書館で確認してみます。"]],ask:"女の学生は、まず何をしますか。",opts:["別の会社に連絡する","図書館でデータを探す","レポートを書き始める","締め切りを延ばす手続きをする"],ans:1,exp:"老師建議用圖書館的統計資料比找新公司快，學生說「まず…図書館で確認してみます」。"});
+add("N2","task",{intro:"電話で、お店の男の人とお客さんの女の人が話しています。",lines:[["M","お電話ありがとうございます。サポートセンターでございます。"],["F","あの、先週買った洗濯機が動かなくなってしまって。"],["M","電源は入りますか。"],["F","電源は入るんですけど、水が出ないんです。"],["M","蛇口は開いていますか。"],["F","あ、確認していませんでした。…あ、閉まっていました。でも、開けても水が出ないんです。"],["M","そうですか。では、お客様のお宅に伺って確認いたします。明日の午前と午後、どちらがよろしいですか。"],["F","午前は出かけるので、午後でお願いします。"],["M","かしこまりました。では、午後に伺います。お名前と住所をお願いできますか。"]],ask:"女の人は、このあと、何をしますか。",opts:["蛇口を確認する","午前の予定を変える","名前と住所を伝える","洗濯機の電源を入れる"],ans:2,exp:"水龍頭已經確認過了，時間也決定是下午。最後被要求的是「お名前と住所」。"});
 
-重要語彙:
-新鮮・素材・雰囲気・値段・特徴・刺身・うまい・だし
-お好み焼き粉・小麦粉・かつおぶし・材料・具・調味料
-ゆでる・揚げる・蒸す・煮る・炒める・焼く・混ぜる
-`;
+add("N2","point",{intro:"男の人と女の人が、転職について話しています。",lines:[["F","転職、決めたんだって？"],["M","うん。給料は今の会社のほうがいいんだけど、新しい会社は残業がほとんどなくて、家族と過ごす時間が増えそうなんだ。"],["F","へえ。やりたい仕事だったから、じゃないんだ。"],["M","もちろん仕事も魅力だけど、決め手は家族との時間かな。"]],ask:"男の人が、新しい会社を選んだ一番の理由は何ですか。",opts:["給料が上がるから","やりたい仕事だから","家族との時間が増えるから","会社が家に近いから"],ans:2,exp:"薪水其實現在的公司比較高。「決め手は〜」（決定性因素）就是「家族との時間」。"});
+add("N2","point",{intro:"二人が、レストランについて話しています。",lines:[["M","ここ、どう？ 初めて来たんでしょ？"],["F","料理はおいしいし、店の雰囲気もいいと思う。ただ、注文してから出てくるまでに、ちょっと時間がかかりすぎるかな。"],["M","確かに。昼休みだと困るよね。"]],ask:"女の人は、この店のどこに不満を持っていますか。",opts:["料理の味","店の雰囲気","料理が出るまでの時間","値段"],ans:2,exp:"先稱讚味道和氣氛，「ただ、〜」後面才是不滿：上菜時間太久。"});
+add("N2","point",{intro:"店で、男の人と店員の女の人が話しています。",lines:[["M","先週ここで買ったこの掃除機なんですが、返品したいんです。"],["F","どこか、問題がございましたか。"],["M","壊れているわけじゃないんです。ただ、思っていたより音がうるさくて、夜は使えそうにないんですよ。"],["F","さようでございますか。"]],ask:"男の人が、この掃除機を返品したい理由は何ですか。",opts:["壊れていたから","値段が高かったから","音が大きかったから","サイズが大きかったから"],ans:2,exp:"「壊れているわけじゃない」先否定故障，真正理由是「音がうるさくて」。"});
 
-// ── SYSTEM PROMPT ──
-function buildSystem() {
-  return `あなたは優秀な日本語の先生です。生徒の名前は「${userName}さん」です。
+add("N2","gist",{intro:"大学の授業で、先生が話しています。",lines:[["M","近年、都市部では、車を持たない若者が増えています。その背景には、公共交通機関が発達していることに加え、車の維持費が高いことがあります。また、必要なときだけ借りるカーシェアリングが普及したことも、大きな理由です。"]],ask:"この話の主なテーマは何ですか。",opts:["若者が車を持たなくなった背景","カーシェアリングの料金","公共交通機関の事故","車の新しい技術"],ans:0,exp:"整段在說「為什麼年輕人不再買車」的背景：交通發達、維持費高、共享汽車普及。"});
+add("N2","gist",{intro:"会社で、女の人が話しています。",lines:[["F","今回のプロジェクトでは、私たちのチームは、期限には間に合いましたが、予算を大きく超えてしまいました。原因は、最初の見積もりが甘かったことです。次のプロジェクトでは、計画の段階で、もっと慎重に費用を計算する必要があると思います。"]],ask:"話し手が一番言いたいことは何ですか。",opts:["期限を守ることが大切だ","費用の見積もりを慎重にすべきだ","チームを大きくしたい","予算を増やしてほしい"],ans:1,exp:"最後的「〜必要があると思います」是主張：計畫階段要更謹慎估算費用。"});
+add("N2","gist",{intro:"会社で、女の人と男の人が、新しい制度について話しています。",lines:[["F","来月から、うちの会社でも在宅勤務が週二日までできるようになるそうですね。"],["M","ええ。でも、会議のある日は出社しなきゃいけないし、結局あまり変わらないかもしれませんよ。"],["F","確かに。でも、選べる自由があるのはありがたいです。"]],ask:"二人は、在宅勤務についてどう思っていますか。",opts:["二人とも全面的に賛成している","男の人は効果を疑い、女の人は選べることを評価している","二人とも反対している","女の人は出社を希望している"],ans:1,exp:"男的說「あまり変わらないかも」（懷疑效果）；女的說「選べる自由があるのはありがたい」（肯定可以選擇）。"});
 
-【あなたの性格と話し方】
-- 明るく、温かく、励ましながら教える
-- 主に日本語で話す（B1レベルに合わせてゆっくり・明瞭に）
-- 難しい文法を説明するときだけ、ごく簡単な中国語（繁体字）を補足してもいい
-- 漢字には必ずふりがなをつける（例：自己紹介（じこしょうかい））
-- 返答は簡潔に（3〜5文）、必ず会話を続ける質問で終わる
-- 絵文字を適度に使って親しみやすく
+add("N2","integ",{intro:"家族三人が、夏休みの旅行について話しています。",lines:[["F","ねえ、夏休みの旅行、遊園地がいい！"],["M","遊園地は混むし、疲れるよ。お父さんは温泉でゆっくりしたいな。"],["F2","私は海がいいな。でも、お父さんの仕事の都合で、休みは三日しか取れないのよね。"],["M","三日なら、遠い海は無理だな。近くの温泉なら、移動も楽だ。"],["F","温泉かあ…。じゃあ、プールがある温泉施設は？ 遊園地みたいに遊べるし。"],["F2","それなら、みんな楽しめそうね。"],["M","プール付きの温泉施設か。それなら、いいかな。"]],ask:"家族は、どんな旅行にすることにしましたか。",opts:["遊園地に行く旅行","遠い海に行く旅行","プールのある温泉施設に行く旅行","近くの温泉でゆっくりする旅行"],ans:2,exp:"三個人的條件互相折衷：女兒要玩、父親要泡溫泉、母親要海但只有三天——最後是「有泳池的溫泉設施」。"});
+add("N2","integ",{intro:"携帯電話の店で、店員がお客さんに二つの料金プランを説明しています。",lines:[["F2","Aプランは月三千円で、データは月五ギガまで。通話は三十秒ごとに二十円かかります。Bプランは月四千五百円で、データは使い放題、通話は一回十分まで無料です。"],["M","うーん。動画はほとんど見ないんですが、仕事で電話はよくするんです。一回が長いと、十分くらいかかることもあります。"],["F2","データが足りるなら、通話の料金次第ですね。月にどのくらい通話をされますか。"],["M","毎日、二、三回、それぞれ十分くらいです。"],["F2","それでしたら、Aプランだと通話料が高くなるので、Bプランのほうが安くなります。"],["M","わかりました。じゃあ、Bプランにします。"]],ask:"お客さんは、どうしてBプランに決めましたか。",opts:["動画をたくさん見るから","データが足りなくなりそうだから","通話が多く、Bのほうが安くなるから","Aプランが売り切れだから"],ans:2,exp:"客人不看影片、資料量夠用；但每天打好幾通十分鐘左右的電話，A 的通話費會變貴，所以 B 反而比較便宜。"});
+add("N2","integ",{intro:"会社で、三人が、退職する部長へのプレゼントについて話しています。",lines:[["F","部長への送別のプレゼント、何がいいでしょうね。腕時計はどうかな。"],["M","腕時計は高いし、好みもあるから難しいんじゃないかな。"],["F2","旅行券はどうですか。部長、退職したらゆっくり旅行したいっておっしゃっていましたよ。"],["F","いいですね。でも、旅行券だけだと、ちょっと寂しい気もします。"],["M","じゃあ、みんなでメッセージを書いた色紙を添えようか。"],["F2","それなら、気持ちも伝わりますね。"],["F","じゃあ、旅行券とメッセージ色紙にしましょう。"]],ask:"三人は、何を贈ることにしましたか。",opts:["腕時計","旅行券と色紙","旅行券だけ","花束と色紙"],ans:1,exp:"手錶被否決；旅行券被接受但「只有旅行券有點寂寞」，所以加上大家寫的留言色紙。"});
 
-【授業の進め方】
-- まるごと中級1 B1の内容に沿って自然に授業を進める
-- 65%は教科書の内容（文法・語彙・会話場面）、35%は延伸・自由会話
-- 生徒が何か言ったら必ずコメントして、次の練習へつなぐ
-- トピック1（はじめての人と）→ トピック2（おすすめの料理）の順で進める
-- 生徒のレベルに合わせて難易度を調整する
+/* ===== N1 ===== */
+add("N1","quick",{lines:[["M","今回の件は、私の不注意でご迷惑をおかけしました。"]],rv:"F",opts:["いえ、お互いさまですから、お気になさらず。","ええ、本当に不注意でしたね。","いえ、ご迷惑をおかけしてもよろしいです。"],ans:0,exp:"對方道歉時，回「お互いさまですから、お気になさらず」是最得體的回應。其他選項不是失禮就是文法錯誤。"});
+add("N1","quick",{lines:[["F","この調子で売り上げが伸びれば、目標達成も夢じゃないね。"]],rv:"M",opts:["ええ、油断せずに頑張りましょう。","いえ、夢はありませんでした。","はい、夢で見たことがあります。"],ans:0,exp:"「夢じゃない」是「並非遙不可及」的慣用說法，不是真的「夢」。接著提醒不要大意最自然。"});
+add("N1","quick",{lines:[["M","来週の接待、場所はどこでもいいと言われても、かえって困るんだよね。"]],rv:"F",opts:["確かに。いくつか候補を挙げて、選んでいただきましょうか。","ええ、どこにもありませんでした。","困らないように、場所は決めないほうがいいです。"],ans:0,exp:"「かえって困る」＝反而為難。理解了對方的煩惱，並提出具體對策（列幾個候補讓對方選）最合理。"});
 
-【生徒の発言を評価するとき】
-生徒が日本語で話したら、必ずこの形式で返す：
+add("N1","task",{intro:"会社で、課長と部下が、展示会の準備について話しています。",lines:[["F2","展示会のブース、レイアウトの最終案はできた？"],["M2","はい。ただ、先ほど印刷会社から、パンフレットの納品が一日遅れると連絡がありました。"],["F2","それは困ったな。初日に配る予定だったでしょう。"],["M2","はい。デザインデータを渡せば、近くの別の業者なら明日の朝には刷れるそうですが、費用は少し上がります。"],["F2","費用はやむを得ないけど、部長の許可が必要だね。私から話しておくから、あなたはその業者に見積もりだけ先に出してもらって。"],["M2","承知しました。"]],ask:"男の人は、このあと、まず何をしますか。",opts:["部長に許可をもらう","別の印刷業者に見積もりを頼む","レイアウトの案を修正する","元の印刷会社に納品日を相談する"],ans:1,exp:"部長由課長去說明；部下被指示的是「その業者に見積もりだけ先に出してもらって」。"});
+add("N1","task",{intro:"大学で、先生と女の学生が、学会発表のスライドについて話しています。",lines:[["M","発表のスライド、見たよ。内容はいいんだけど、結論が最後まで見えてこない感じがするね。"],["F","結論は最後のスライドにまとめたつもりだったんですが…。"],["M","聴衆は十五分しか聞かないんだから、最初に結論を述べて、そのあと根拠を示す構成のほうが伝わりやすいと思うよ。"],["F","なるほど。では、スライドの順番を入れ替えます。"],["M","その前に、データのグラフ。色が似ていて区別しにくいから、そこを直してからのほうが効率的だな。"],["F","わかりました。"]],ask:"女の学生は、まず何をしますか。",opts:["スライドの順番を入れ替える","グラフの色を直す","結論を最後のスライドにまとめる","発表の時間を短くする"],ans:1,exp:"學生本來想先調換順序，但老師說「その前に」先修圖表顏色比較有效率。"});
+add("N1","task",{intro:"ホテルのフロントで、女の人と男のお客さんが話しています。",lines:[["M","すみません、明日の朝の便で出発するので、早朝のタクシーを頼みたいんですが。"],["F","かしこまりました。何時にご出発ですか。"],["M","空港まで四十分かかるので、五時には出たいんです。"],["F","承知しました。ただ、早朝はご予約が混み合いますので、確実にご用意するには、今夜八時までにご確認が必要なんです。"],["M","では今お願いします。朝食は、その時間だと食べられませんよね？"],["F","お弁当をご用意することもできますが…。"],["M","じゃあ、それも頼もうかな。"]],ask:"男の人は、フロントで何を頼みましたか。",opts:["タクシーだけ","タクシーと弁当","弁当だけ","朝食の時間の変更"],ans:1,exp:"男的說「今お願いします」＝叫了計程車；最後也說「それも頼もうかな」＝加訂便當。"});
 
-✅ 正しかった点：（具体的に褒める）
-📝 改善ポイント：（間違いがあれば優しく直す。例：「〜と言いましたね。でも、正しくは〜です」）
-（そのあと会話を続ける）
+add("N1","point",{intro:"会社で、女の人と男の人が、新しい制度について話しています。",lines:[["F","今度のフレックスタイム制、どう思います？"],["M","自由に時間を選べるのは魅力的ですが、問題は、会議の時間が合わせにくくなることですね。"],["F","確かに。連絡が取りにくくなりかねませんね。"],["M","ええ。働く時間より、むしろ連携の取りやすさをどう確保するかが課題でしょう。"]],ask:"男の人は、新しい制度のどこが問題だと言っていますか。",opts:["働く時間が長くなること","給料が下がること","連携が取りにくくなること","制度の説明が難しいこと"],ans:2,exp:"「〜かねない」表示有可能變成不好的結果。男的指出課題是如何確保「連携の取りやすさ」。"});
+add("N1","point",{intro:"大学の友達同士が、研究について話しています。",lines:[["M","研究テーマ、変えたんだって？"],["F","ええ。前のテーマは、資料が少なくて行き詰まっていたの。それに、指導教官にも、もっと社会に役立つ分野を考えてみたらと言われて。"],["M","じゃあ、先生に言われたから？"],["F","それもあるけど、決め手は、資料不足で先に進めなくなったことかな。"]],ask:"女の人が研究テーマを変えた一番の理由は何ですか。",opts:["先生に勧められたから","資料が足りず研究が進まなかったから","社会の役に立つ分野に興味があるから","前のテーマに飽きたから"],ans:1,exp:"「それもあるけど、決め手は〜」——先生的建議只是其次，決定性原因是資料不足。"});
+add("N1","point",{intro:"お店で、お客さんの男の人と店主の女の人が話しています。",lines:[["M","このお店、来月閉めるって本当ですか。"],["F","ええ。売り上げが落ちたのも事実ですが、それ以上に、私も年を取って、仕入れや仕込みがきつくなってきたものですから。"],["M","そうですか。寂しくなりますね。"]],ask:"店主が閉店を決めた一番の理由は何ですか。",opts:["売り上げが減ったから","店の建物が古くなったから","店主の体力的な負担が大きくなったから","近くに新しい店ができたから"],ans:2,exp:"「それ以上に〜」＝比營收減少更重要的是「年紀大了，進貨和準備太吃力」。"});
 
-間違いがなければ📝は省略してOK。
+add("N1","gist",{intro:"大学の授業で、先生が話しています。",lines:[["M","最近、フードロス、つまり、まだ食べられるのに捨てられてしまう食べ物の問題が注目されています。個人が買いすぎない、使い切るといった努力も大切ですが、実は、家庭より、小売店や飲食店から出る量のほうが多いと言われています。そのため、企業側の取り組みも不可欠でしょう。"]],ask:"話の要点は何ですか。",opts:["フードロスは企業と個人の両方で取り組むべきだが、企業側の対策が欠かせない","フードロスの責任は主に家庭にある","フードロスはもう解決した","食べ物は安く買うべきだ"],ans:0,exp:"個人努力很重要，但「家庭より小売店や飲食店のほうが多い」，所以結論是「企業側の取り組みも不可欠」。"});
+add("N1","gist",{intro:"ラジオで、女の人が話しています。",lines:[["F","新しい技術が登場すると、「仕事が奪われる」という不安の声が必ず上がります。確かに、なくなる仕事はあるでしょう。しかし歴史を振り返れば、技術は新しい仕事も生み出してきました。大切なのは、変化を恐れるのではなく、学び続ける姿勢だと思います。"]],ask:"話し手の主張は何ですか。",opts:["新しい技術は規制すべきだ","技術で仕事がなくなるので学んでも無駄だ","変化に対して学び続けることが大切だ","歴史は繰り返さない"],ans:2,exp:"「確かに〜、しかし〜」先讓步再轉折。主張在最後：不要害怕變化，要持續學習。"});
+add("N1","gist",{intro:"二人が、小説について話しています。",lines:[["M","この小説、評判ほど面白くなかったな。"],["F","そう？ 私は、最初は退屈だったけど、終わりのほうで、ああ、この人物の行動にはこういう意味があったんだって、全部つながって、読み終わってからじわじわ良さがわかってきたよ。"],["M","へえ。じゃあ、もう一度読み直したら、印象が変わるかもな。"]],ask:"女の人は、この小説をどう評価していますか。",opts:["最初から最後まで面白かった","最後まで退屈だった","最初は退屈だったが、読み終えてから良さがわかった","登場人物が理解できなかった"],ans:2,exp:"「最初は退屈だったけど〜じわじわ良さがわかってきた」＝一開始無聊，讀完後才慢慢體會到好。"});
 
-【カリキュラム内容】
-${CURRICULUM}
+add("N1","integ",{intro:"大学の授業で、先生がごみ収集の有料化について、三つの案を紹介しています。そのあと、学生が意見を言っています。",lines:[["M","ごみ収集の有料化には、三つの案が考えられます。A案は、すべての世帯から一律の料金を取る方法です。B案は、出したごみの量に応じて、料金が変わる方法です。C案は、有料化せず、啓発活動でごみを減らしてもらう方法です。では、意見を聞かせてください。"],["F","私は、B案がいいと思います。ごみを減らす努力をした人が得をするので、公平ですし、実際にごみが減る効果も期待できるからです。ただ、不法投棄が増えるおそれがあるので、監視の仕組みも必要だと思います。"],["M2","僕はC案です。有料化は、低所得の家庭に負担が重いです。教育で意識を変えるほうが、長い目で見れば効果があるはずです。"],["M","なるほど。"]],ask:"女の学生が支持している案と、その案への心配を、正しく述べているのはどれですか。",opts:["B案、不法投棄が増えること","A案、料金が高いこと","B案、料金が高いこと","C案、効果が出るまで時間がかかること"],ans:0,exp:"女學生支持 B 案（依量計費），擔心的是「不法投棄」增加。C 案是男學生支持的。"});
+add("N1","integ",{intro:"夫婦が、引っ越し業者の説明を聞いたあと、話し合っています。",lines:[["F2","三つのプランがございます。Aプランは、荷造りも荷ほどきもすべて当社が行います。料金は十二万円です。Bプランは、荷造りはお客様、運搬のみ当社で、八万円です。Cプランは、荷造りも運搬もお客様で、トラックをお貸しするだけで、四万円です。"],["M","うーん、Aは高いな。"],["F","でも、私は仕事が忙しくて、荷造りをする時間がほとんどないのよ。"],["M","僕が週末に荷造りするよ。ただ、運搬は重い家具が多いから、自分たちではできないな。"],["F","じゃあ、荷造りは私たちでして、運搬だけ頼もう。"],["M","そうだね。Bにしよう。"]],ask:"二人が選んだプランと、その理由として正しいのはどれですか。",opts:["Aプラン、時間がないから","Bプラン、重い家具を自分たちで運べないから","Bプラン、いちばん安いから","Cプラン、トラックを借りられるから"],ans:1,exp:"荷造り男的週末可以做，但搬運因為家具重沒辦法自己來，所以選 B。最便宜的是 C，所以「いちばん安い」不對。"});
+add("N1","integ",{intro:"ラジオ番組で、司会者と二人の専門家が、週休三日制について話しています。",lines:[["F","週休三日制について、お二人のご意見を伺います。まず、田中さんからお願いします。"],["M","私は、導入を進めるべきだと考えています。休みが増えれば、社員の満足度が上がり、結果的に生産性も上がるという調査結果が出ているからです。"],["F","ありがとうございます。山口さんはいかがですか。"],["F2","趣旨には賛成なんですが、現実には、人手の足りない中小企業にとって、休みを増やすのはかなりの負担です。大企業と同じように進めるのは難しいと思います。"],["M","確かに、支援の仕組みは必要ですね。"],["F2","ええ、国の支援が前提になるでしょう。"]],ask:"二人の専門家の意見について、正しいのはどれですか。",opts:["男性は導入に賛成し、女性は中小企業の負担を心配している","男性は反対し、女性は賛成している","二人とも、今すぐ全企業で導入すべきだと考えている","二人とも導入は不可能だと考えている"],ans:0,exp:"田中（男）：賛成，理由是滿意度與生産力。山口（女）：贊成主旨但擔心中小企業負擔，需要國家支援。"});
 
-【今日の授業開始】
-${userName}さんに日本語で温かく挨拶して、今日の授業を始めてください。
-まず自己紹介してもらい、トピック1の練習を始めましょう。`;
+/* ---------- 定義 ---------- */
+const TYPES={
+  quick:{jp:"即時応答",zh:"短句即時回應",icon:"💬",audio:true},
+  task:{jp:"課題理解",zh:"聽完判斷該做什麼",icon:"📋",audio:false},
+  point:{jp:"ポイント理解",zh:"抓重點與原因",icon:"🎯",audio:false},
+  gist:{jp:"概要理解",zh:"聽懂大意",icon:"🧭",audio:true},
+  utter:{jp:"発話表現",zh:"情境中該說什麼",icon:"🗣",audio:true},
+  integ:{jp:"統合理解",zh:"綜合比較多人意見",icon:"🧩",audio:false}
+};
+const LEVELS={
+  N3:{title:"桜の森",sub:"N3 · 基礎から中級へ",color:"#f4a6c0",types:["quick","task","point","gist","utter"]},
+  N2:{title:"雪の山",sub:"N2 · 中上級の壁",color:"#9fd3ff",types:["quick","task","point","gist","integ"]},
+  N1:{title:"星の城",sub:"N1 · 最終ステージ",color:"#f2c14e",types:["quick","task","point","gist","integ"]}
+};
+const RANKS=[[0,"見習い"],[100,"旅人"],[300,"聞き上手"],[700,"耳の達人"],[1500,"聴解マスター"],[3000,"伝説の聞き手"]];
+const VOICE={N:"alloy",F:"nova",F2:"shimmer",M:"onyx",M2:"echo"};
+const ROLE={N:"試験の放送を担当する、落ち着いたナレーター",F:"二十代から三十代の女性",F2:"四十代の落ち着いた女性",M:"三十代の男性",M2:"二十代の若い男性"};
+const LAB={N:"放送",F:"女",F2:"女②",M:"男",M2:"男②"};
+const LVTONE={N3:"はっきりと、少しゆっくりめに",N2:"はっきりと、自然な速さで",N1:"ネイティブ同士の会話のような自然な速さで"};
+const LVSPEED={N3:0.95,N2:1.0,N1:1.08};
+
+/* ---------- 小工具 ---------- */
+const $=s=>document.querySelector(s);
+const app=document.getElementById("app");
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
+
+/* ---------- 狀態 ---------- */
+const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
+const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",set:Object.assign({},DEF_SET)});
+let S=Object.assign(fresh(),LS.get("jq_state",{}));
+S.set=Object.assign({},DEF_SET,S.set||{});
+let KEY=LS.get("jq_key","");
+let curLv=LS.get("jq_lv","N3");
+if(!LEVELS[curLv])curLv="N3";
+const save=()=>LS.set("jq_state",S);
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function touchDay(){const n=new Date(),t=ymd(n);if(S.lastDay===t)return;const y=new Date(n.getTime()-864e5);S.streakDays=S.lastDay===ymd(y)?S.streakDays+1:1;S.lastDay=t;save()}
+const rankOf=xp=>{let i=0;RANKS.forEach((r,k)=>{if(xp>=r[0])i=k});return{i,name:RANKS[i][1],cur:RANKS[i][0],next:RANKS[i+1]?RANKS[i+1][0]:null}};
+
+/* ============================================================
+   音聲引擎（OpenAI TTS + WebAudio + 本機快取）
+   ============================================================ */
+let ctx=null,active=[],playToken=0;
+const SILENT="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAAAA";
+function actx(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;ctx=new C()}return ctx}
+function kick(){ // 必須在使用者點擊的同一個事件裡呼叫（解除 Safari / iOS 的自動播放限制）
+  try{const c=actx();if(c.state==="suspended")c.resume()}catch(e){}
+  try{const a=new Audio(SILENT);a.play().catch(()=>{})}catch(e){}
 }
+async function ensureRunning(){const c=actx();if(c.state!=="running"){try{await Promise.race([c.resume(),sleep(500)])}catch(e){}}return c.state==="running"}
+function stopSrc(){active.forEach(s=>{try{s.stop()}catch(e){}});active=[]}
 
-// ── SETUP ──
-window.addEventListener('DOMContentLoaded', () => {
-  const ok = localStorage.getItem('jp_oai');
-  const ak = localStorage.getItem('jp_ant');
-  const un = localStorage.getItem('jp_name');
-  if (ok) { document.getElementById('oai').value=ok; document.getElementById('oai-ok').style.display='block'; }
-  if (ak) { document.getElementById('ant').value=ak; document.getElementById('ant-ok').style.display='block'; }
-  if (un) document.getElementById('username').value = un;
-});
+const mem=new Map();let dbp=null;
+function idb(){if(dbp)return dbp;dbp=new Promise(res=>{try{if(!window.indexedDB)return res(null);const r=indexedDB.open("jq-audio",1);r.onupgradeneeded=()=>r.result.createObjectStore("a");r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});return dbp}
+async function cget(k){if(mem.has(k))return mem.get(k);const d=await idb();if(!d)return null;return new Promise(res=>{try{const q=d.transaction("a").objectStore("a").get(k);q.onsuccess=()=>{if(q.result)mem.set(k,q.result);res(q.result||null)};q.onerror=()=>res(null)}catch(e){res(null)}})}
+async function cset(k,v){mem.set(k,v);const d=await idb();if(!d)return;try{d.transaction("a","readwrite").objectStore("a").put(v,k)}catch(e){}}
+const ckey=(who,lv,t)=>who+"|"+lv+"|"+(S.set.slow?1:0)+"|"+t;
 
-function eye(id, btn) {
-  const el = document.getElementById(id);
-  el.type = el.type==='password' ? 'text' : 'password';
-  btn.textContent = el.type==='password' ? '👁' : '🙈';
+function instr(who,lv){
+  const tone=S.set.slow?"かなりゆっくり、一語一語をはっきりと":LVTONE[lv];
+  const extra=who==="N"?"感情を込めすぎず、試験の放送のように淡々と。":"読み上げ口調ではなく、自然な会話のイントネーションで。";
+  return "日本語のネイティブスピーカーとして、"+tone+"話してください。話し手は"+ROLE[who]+"です。"+extra;
 }
-
-function launch() {
-  const ok = document.getElementById('oai').value.trim();
-  const ak = document.getElementById('ant').value.trim();
-  const un = document.getElementById('username').value.trim();
-
-  if (!ok || !ok.startsWith('sk-'))     { toast('OpenAI Key を入力してください', 'err'); return; }
-  if (!ak || !ak.startsWith('sk-ant-')) { toast('Claude Key を入力してください', 'err'); return; }
-
-  oaiKey   = ok; antKey = ak;
-  userName = un || 'ティム';
-  autoPlay = document.getElementById('auto-play').checked;
-  showText = document.getElementById('show-text').checked;
-
-  if (document.getElementById('save-k').checked) {
-    localStorage.setItem('jp_oai',  ok);
-    localStorage.setItem('jp_ant',  ak);
-    localStorage.setItem('jp_name', userName);
-  } else {
-    ['jp_oai','jp_ant','jp_name'].forEach(k=>localStorage.removeItem(k));
-  }
-
-  document.getElementById('setup').style.display = 'none';
-  document.getElementById('app').classList.add('active');
-  syncBtns();
-
-  // Start lesson
-  if (!sessionStarted) { sessionStarted=true; startLesson(); }
-}
-
-function goSetup() {
-  stopAudio();
-  document.getElementById('setup').style.display = 'flex';
-  document.getElementById('app').classList.remove('active');
-}
-
-// ── TOGGLE ──
-function syncBtns() {
-  document.getElementById('btn-sound').className = 'bar-btn' + (autoPlay?' on':'');
-  document.getElementById('btn-text').className  = 'bar-btn' + (showText?' on':'');
-}
-function toggleSound() { autoPlay=!autoPlay; syncBtns(); toast(autoPlay?'音声：オン':'音声：オフ'); }
-function toggleText()  { showText=!showText;  syncBtns(); toast(showText?'テキスト：表示':'テキスト：非表示'); }
-
-// ── START LESSON (AI speaks first) ──
-async function startLesson() {
-  setStatus('先生が準備中…', 'proc');
-  showThinking();
-  try {
-    const reply = await claudeChat([{ role:'user', content:`授業を始めてください。私の名前は${userName}です。` }]);
-    removeThinking();
-    history.push({ role:'user', content:`授業を始めてください。私の名前は${userName}です。` });
-    history.push({ role:'assistant', content: reply });
-    addBubble('sensei', reply, true);
-    setStatus('マイクを押して話してください', '');
-  } catch(e) {
-    removeThinking(); toast(e.message,'err'); setStatus('エラー','');
-  }
-}
-
-// ── MIC ──
-function tapMic() {
-  if (isBusy) return;
-  if (isRecording) { stopRec(); }
-  else { startRec(); }
-}
-
-async function startRec() {
-  // Unlock AudioContext on first user interaction (Safari/Chrome autoplay policy)
-  getAudioCtx();
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch(e) { toast('マイクが使えません: '+e.message,'err'); return; }
-
-  audioChunks = [];
-  const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-    ? 'audio/webm;codecs=opus'
-    : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-
-  mediaRecorder = new MediaRecorder(mediaStream, { mimeType: mime });
-  mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
-  mediaRecorder.onstop = () => processRec(mime);
-  mediaRecorder.start(300);
-
-  isRecording = true;
-  document.getElementById('mic-btn').classList.add('recording');
-  document.getElementById('mic-icon').textContent = '⏹';
-  document.getElementById('mic-label').textContent = 'タップして停止';
-  setStatus('録音中…', 'rec');
-}
-
-function stopRec() {
-  if (!mediaRecorder || !isRecording) return;
-  isRecording = false;
-  mediaRecorder.stop();
-  mediaStream?.getTracks().forEach(t=>t.stop());
-  document.getElementById('mic-btn').classList.remove('recording');
-  document.getElementById('mic-icon').textContent = '🎙';
-  document.getElementById('mic-label').textContent = '話してください';
-}
-
-async function processRec(mime) {
-  if (audioChunks.length === 0) return;
-  isBusy = true;
-  document.getElementById('mic-btn').classList.add('disabled');
-  setStatus('認識中…', 'proc');
-
-  const blob = new Blob(audioChunks, { type: mime });
-  if (blob.size < 1500) { isBusy=false; document.getElementById('mic-btn').classList.remove('disabled'); setStatus('短すぎます。もう一度どうぞ',''); return; }
-
-  try {
-    // 1. Whisper
-    const userText = await whisper(blob, mime);
-    if (!userText || userText.trim().length < 1) {
-      isBusy=false; document.getElementById('mic-btn').classList.remove('disabled');
-      setStatus('聞き取れませんでした',''); return;
-    }
-
-    // Show user bubble
-    addBubble('user', userText, false);
-    history.push({ role:'user', content: userText });
-
-    // 2. Claude
-    setStatus('先生が考え中…', 'proc');
-    showThinking();
-    const reply = await claudeChat(history);
-    removeThinking();
-    history.push({ role:'assistant', content: reply });
-
-    // Show + speak
-    addBubble('sensei', reply, true);
-    setStatus('マイクを押して話してください', '');
-
-  } catch(e) {
-    removeThinking();
-    toast(e.message, 'err');
-    setStatus('エラー: '+e.message.substring(0,40), '');
-  } finally {
-    isBusy = false;
-    document.getElementById('mic-btn').classList.remove('disabled');
-  }
-}
-
-// ── WHISPER ──
-async function whisper(blob, mime) {
-  const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-  const fd = new FormData();
-  fd.append('file', blob, `r.${ext}`);
-  fd.append('model', 'whisper-1');
-  fd.append('language', 'ja');
-  const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method:'POST', headers:{'Authorization':`Bearer ${oaiKey}`}, body:fd
-  });
-  if (!r.ok) { const e=await r.json().catch(()=>{}); throw new Error('Whisper: '+(e?.error?.message||`HTTP ${r.status}`)); }
-  return (await r.json()).text;
-}
-
-// ── CLAUDE ──
-async function claudeChat(msgs) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key': antKey,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 700,
-      system: buildSystem(),
-      messages: msgs.slice(-20)
-    })
-  });
-  if (!r.ok) { const e=await r.json().catch(()=>{}); throw new Error('Claude: '+(e?.error?.message||`HTTP ${r.status}`)); }
-  return (await r.json()).content?.[0]?.text || '';
-}
-
-// ── AUDIO CONTEXT (Safari + Autoplay fix) ──
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-
-// ── TTS (OpenAI) ──
-async function speak(text, isSensei=true) {
-  stopAudio();
-
-  const clean = text
-    .replace(/[\u2705\u274C\u{1F4DD}\u{1F4DA}\u{1F3CC}\u{1F3B5}\u{1F60A}\u{1F44D}\u{1F646}\u{1F389}\u{1F4AA}\u{2728}\u{1F44B}\u{1F393}]/gu,'')
-    .replace(/（[\u3041-\u3096]+）/g,'')
-    .replace(/\*+/g,'')
-    .replace(/#{1,3}\s*/g,'')
-    .replace(/---/g,'')
-    .replace(/\n+/g,' ')
-    .replace(/<[^>]*>/g,'')
-    .trim();
-
-  if (!clean || clean.length < 2) return;
-
-  const voice = isSensei ? 'shimmer' : 'onyx';
-  setStatus('先生が話しています…', 'play');
-
-  try {
-    const r = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${oaiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ model:'tts-1-hd', voice, input:clean, speed:0.9 })
-    });
-
-    if (!r.ok) {
-      const errData = await r.json().catch(()=>({}));
-      const msg = errData?.error?.message || 'HTTP ' + r.status;
-      toast('音声エラー：' + msg, 'err');
-      setStatus('音声エラー','');
-      return;
-    }
-
-    const arrayBuffer = await r.arrayBuffer();
-    const ctx = getAudioCtx();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-
-    const source = ctx.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(ctx.destination);
-    source.playbackRate.value = 1.0;
-
-    // Store reference to stop if needed
-    currentAudio = source;
-    source.start(0);
-    source.onended = () => {
-      setStatus('マイクを押して話してください','');
-      currentAudio = null;
-    };
-
-  } catch(e) {
-    toast('TTS エラー：' + e.message, 'err');
-    setStatus('エラー','');
-    console.error('TTS error:', e);
-  }
-}
-
-function stopAudio() {
-  if (currentAudio) {
-    try { currentAudio.stop(); } catch(e) {}
-    currentAudio = null;
-  }
-  document.querySelectorAll('.bubble-play.playing').forEach(b => {
-    b.classList.remove('playing'); b.textContent='🔊';
-  });
-  setStatus('マイクを押して話してください','');
-}
-
-// ── UI HELPERS ──
-function addBubble(role, text, doSpeak=false) {
-  const feed = document.getElementById('feed');
-  document.getElementById('empty')?.remove();
-
-  const isS = role==='sensei';
-  const wrap = document.createElement('div');
-  wrap.className = `msg ${role}`;
-
-  const av = document.createElement('div');
-  av.className = `avatar ${isS?'s':'u'}`;
-  av.textContent = isS ? '先' : userName.charAt(0).toUpperCase();
-
-  const bwrap = document.createElement('div');
-  bwrap.className = 'bubble-wrap';
-
-  // Parse correction
-  const { mainText, correctionHTML } = parseCorrection(text);
-
-  if (showText || !isS) {
-    const bub = document.createElement('div');
-    bub.className = 'bubble';
-    bub.innerHTML = formatText(mainText);
-    bwrap.appendChild(bub);
-
-    if (correctionHTML && isS) {
-      const cor = document.createElement('div');
-      cor.className = 'correction';
-      cor.innerHTML = correctionHTML;
-      bwrap.appendChild(cor);
+async function ttsRequest(text,who,lv){
+  const k=ckey(who,lv,text);
+  const hit=await cget(k);if(hit)return hit;
+  const pref=S.set.ttsPref;
+  let order=pref==="hd"?["tts-1-hd"]:pref==="mini"?["gpt-4o-mini-tts"]:[LS.get("jq_model","gpt-4o-mini-tts"),"tts-1-hd"];
+  order=[...new Set(order)];
+  let last=null;
+  for(const model of order){
+    for(let attempt=0;attempt<2;attempt++){
+      let r;
+      try{
+        const body={model,voice:VOICE[who],input:text,response_format:"mp3"};
+        if(model==="gpt-4o-mini-tts")body.instructions=instr(who,lv);
+        else body.speed=+(LVSPEED[lv]*(S.set.slow?0.8:1)).toFixed(2);
+        r=await fetch("https://api.openai.com/v1/audio/speech",{method:"POST",headers:{Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});
+      }catch(e){last=new Error("ネットワークエラー："+e.message);await sleep(600);continue}
+      if(r.ok){const ab=await r.arrayBuffer();if(pref==="auto")LS.set("jq_model",model);await cset(k,ab);return ab}
+      let msg="";try{const j=await r.json();msg=(j.error&&j.error.message)||""}catch(e){}
+      if(r.status===401)throw new Error("OpenAI Key が正しくありません (401)。設定で入れ直してください");
+      if(r.status===429){
+        if(/quota|billing|credit/i.test(msg))throw new Error("OpenAI 餘額不足：請到 platform.openai.com/settings/organization/billing 充值");
+        await sleep(1500*(attempt+1));last=new Error("リクエストが多すぎます (429)");continue;
+      }
+      last=new Error("TTS "+r.status+"："+(msg||"unknown"));
+      break; // 換下一個模型
     }
   }
+  throw last||new Error("TTS エラー");
+}
+const bufCache=new Map();
+function decode(ab){const c=actx();return new Promise((res,rej)=>{const cp=ab.slice(0);const p=c.decodeAudioData(cp,res,rej);if(p&&p.catch)p.catch(rej)})}
+async function getBuf(p,lv){const k=ckey(p.v,lv,p.t);if(bufCache.has(k))return bufCache.get(k);const ab=await ttsRequest(p.t,p.v,lv);const b=await decode(ab);bufCache.set(k,b);return b}
+async function pool(items,limit,fn){const out=new Array(items.length);let i=0;async function w(){while(i<items.length){const n=i++;out[n]=await fn(items[n],n)}}await Promise.all(Array.from({length:Math.min(limit,items.length)},w));return out}
 
-  if (isS) {
-    const pb = document.createElement('button');
-    pb.className = 'bubble-play';
-    pb.textContent = '🔊';
-    pb.onclick = async () => {
-      if (pb.classList.contains('playing')) { stopAudio(); pb.classList.remove('playing'); pb.textContent='🔊'; return; }
-      stopAudio();
-      pb.classList.add('playing'); pb.textContent='⏹';
-      await speak(text, true);
-      pb.classList.remove('playing'); pb.textContent='🔊';
-    };
-    bwrap.appendChild(pb);
+/* 把題目拆成「誰、說什麼、之後停多久」 */
+function buildParts(q){
+  const P=[],push=(v,t,gap)=>P.push({v,t,gap:gap==null?0.5:gap});
+  const num=["いちばん","にばん","さんばん","よんばん"];
+  const optsAudio=rv=>q.opts.forEach((o,i)=>{push("N",num[i],0.25);push(rv,o,1.0)});
+  const lines=(lastGap)=>{(q.lines||[]).forEach(l=>push(l[0],l[1],0.5));if(P.length)P[P.length-1].gap=lastGap};
+  if(q.type==="quick"){push(q.lines[0][0],q.lines[0][1],1.4);optsAudio(q.rv||"F")}
+  else if(q.type==="task"||q.type==="point"){if(q.intro)push("N",q.intro,0.8);push("N",q.ask,1.8);lines(1.6);push("N",q.ask,0.3)}
+  else if(q.type==="gist"){if(q.intro)push("N",q.intro,0.8);lines(1.3);push("N",q.ask,1.3);optsAudio("N")}
+  else if(q.type==="utter"){push("N",q.ask,1.3);optsAudio(q.rv||"F")}
+  else if(q.type==="integ"){if(q.intro)push("N",q.intro,0.8);lines(1.5);push("N",q.ask,0.3)}
+  return P;
+}
+async function playParts(parts,lv,my,onStart){
+  const ok=await ensureRunning();
+  if(!ok)throw new Error("NEEDGESTURE");
+  const bufs=await pool(parts,4,p=>getBuf(p,lv));
+  if(my!==playToken)return false;
+  const c=actx();
+  if(c.state!=="running")throw new Error("NEEDGESTURE");
+  onStart&&onStart();
+  let t=c.currentTime+0.25;
+  stopSrc();
+  parts.forEach((p,i)=>{const s=c.createBufferSource();s.buffer=bufs[i];s.connect(c.destination);s.start(t);active.push(s);t+=bufs[i].duration+(i<parts.length-1?p.gap:0)});
+  const end=t;
+  while(my===playToken&&c.currentTime<end-0.05)await sleep(120);
+  if(my!==playToken)return false;
+  active=[];return true;
+}
+
+/* ============================================================
+   遊戲邏輯
+   ============================================================ */
+let run=null,audioState="idle";
+const stagesOf=lv=>LEVELS[lv].types.map(t=>({id:lv+"-"+t,lv,type:t})).concat([{id:lv+"-boss",lv,type:"boss"}]);
+const qsOf=(lv,type)=>Q.filter(q=>q.lv===lv&&q.type===type);
+function prep(q){
+  const idx=shuffle(q.opts.map((_,i)=>i));
+  const qi=Object.assign({},q,{opts:idx.map(i=>q.opts[i]),ans:idx.indexOf(q.ans)});
+  qi.parts=buildParts(qi);return qi;
+}
+function startRun(id,qs,hearts,title){
+  if(!qs.length){toast("このステージにはまだ問題がありません");return}
+  run={id,lv:id.split("-")[0],title,qs:qs.map(prep),i:0,hearts,max:hearts,correct:0,xp:0,streak:0,res:[],locked:false};
+  renderQuiz();
+}
+function startStage(id){
+  const [lv,type]=id.split("-");
+  if(type==="boss"){
+    const pool_=shuffle(Q.filter(q=>q.lv===lv).slice()).slice(0,8);
+    return startRun(id,pool_,4,lv+" 模擬試験");
   }
-
-  wrap.appendChild(av);
-  wrap.appendChild(bwrap);
-  feed.appendChild(wrap);
-  feed.scrollTop = feed.scrollHeight;
-
-  if (doSpeak && autoPlay && isS) speak(text, true);
+  startRun(id,qsOf(lv,type),3,TYPES[type].jp);
+}
+function startReview(){
+  const qs=S.wrong.map(id=>Q.find(q=>q.id===id)).filter(Boolean).slice(0,10);
+  if(!qs.length){toast("復習する問題はありません 🎉");return}
+  startRun("review",qs,5,"復習ノート");
 }
 
-function parseCorrection(text) {
-  // Separate ✅/📝 lines from main text
-  const lines = text.split('\n');
-  const mainLines = [], corrLines = [];
-  let inCorr = false;
-  lines.forEach(l => {
-    if (l.startsWith('✅') || l.startsWith('📝') || inCorr) {
-      inCorr = true;
-      corrLines.push(l);
-    } else { mainLines.push(l); }
+/* ---------- 畫面：設定 / 首頁 ---------- */
+function art(lv){
+  const svg={
+  N3:`<svg viewBox="0 0 360 140" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2347"/><stop offset="1" stop-color="#e58aa6"/></linearGradient></defs><rect width="360" height="140" fill="url(#g3)"/><circle cx="292" cy="40" r="20" fill="#ffe8c2" opacity=".92"/><path d="M0 108 L60 66 L112 98 L172 58 L242 104 L300 74 L360 100 V140 H0Z" fill="#2a1a3a" opacity=".9"/><g fill="#ef5b45"><rect x="150" y="66" width="6" height="56"/><rect x="204" y="66" width="6" height="56"/><rect x="138" y="62" width="84" height="8" rx="2"/><rect x="146" y="76" width="68" height="5"/></g><g fill="#ffd3e1" opacity=".9"><circle cx="40" cy="30" r="3"/><circle cx="82" cy="58" r="2.5"/><circle cx="120" cy="22" r="3"/><circle cx="238" cy="30" r="2.5"/><circle cx="330" cy="86" r="3"/><circle cx="20" cy="84" r="2.5"/></g></svg>`,
+  N2:`<svg viewBox="0 0 360 140" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f1a3d"/><stop offset="1" stop-color="#4a79b8"/></linearGradient></defs><rect width="360" height="140" fill="url(#g2)"/><circle cx="70" cy="38" r="17" fill="#f3f6ff"/><circle cx="78" cy="34" r="15" fill="#10204a" opacity=".55"/><path d="M0 120 L70 62 L120 102 L190 40 L260 108 L315 72 L360 104 V140 H0Z" fill="#dfeaff"/><path d="M0 128 L80 86 L140 118 L210 78 L280 120 L360 94 V140 H0Z" fill="#7b9bd0"/><g fill="#fff" opacity=".9"><circle cx="200" cy="18" r="1.5"/><circle cx="250" cy="30" r="1.2"/><circle cx="310" cy="16" r="1.5"/><circle cx="140" cy="24" r="1.2"/></g></svg>`,
+  N1:`<svg viewBox="0 0 360 140" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0d25"/><stop offset="1" stop-color="#3b2a63"/></linearGradient></defs><rect width="360" height="140" fill="url(#g1)"/><circle cx="268" cy="38" r="22" fill="#f2c14e"/><g fill="#0a0d25"><path d="M120 140 V86 H132 V74 H144 V86 H156 V60 L180 40 L204 60 V86 H216 V74 H228 V86 H240 V140Z"/><rect x="168" y="96" width="24" height="44" fill="#0a0d25"/></g><g fill="#f2c14e" opacity=".9"><rect x="172" y="68" width="5" height="9"/><rect x="183" y="68" width="5" height="9"/></g><g fill="#fff" opacity=".85"><circle cx="40" cy="26" r="1.6"/><circle cx="84" cy="52" r="1.2"/><circle cx="320" cy="90" r="1.5"/><circle cx="20" cy="94" r="1.2"/><circle cx="110" cy="18" r="1.4"/></g></svg>`};
+  // 之後可把 Higgsfield 生成的圖放到 art/n3.jpg、art/n2.jpg、art/n1.jpg，會自動覆蓋這裡的向量圖
+  return svg[lv]+`<img src="art/${lv.toLowerCase()}.jpg" alt="" onerror="this.remove()">`;
+}
+function renderSetup(){
+  app.innerHTML=`<div class="setup">
+    <div class="logo">聴解<b>クエスト</b></div>
+    <div class="tag">JLPT LISTENING QUEST</div>
+    <div class="panel">
+      <label>OPENAI API KEY（音聲用）</label>
+      <input id="keyin" class="inp" type="password" placeholder="sk-..." autocomplete="off" value="${KEY||""}">
+      <div class="hint">Key 只存在你這部機器的瀏覽器裡。<br>老師和對話的聲音由 OpenAI 語音生成，同一題第二次起讀本機快取，不再收費。<br><a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a></div>
+      <button class="btn block" data-act="start">はじめる ▶</button>
+    </div></div>`;
+}
+function renderHome(){
+  const L=LEVELS[curLv],rk=rankOf(S.xp),sts=stagesOf(curLv);
+  const pct=rk.next?Math.min(100,Math.round((S.xp-rk.cur)/(rk.next-rk.cur)*100)):100;
+  const total=sts.reduce((a,s)=>a+(S.stars[s.id]||0),0);
+  app.innerHTML=`<div style="--ac:${L.color}">
+    <div class="hd"><div class="brand">聴解<b>クエスト</b></div>
+      <div class="chips"><span class="chip">🔥 ${S.streakDays}日</span><span class="chip">⭐ ${S.xp}</span></div></div>
+    <div class="rank"><div class="row"><b>${rk.name}</b><small>${rk.next?S.xp+" / "+rk.next+" XP":"MAX"}</small></div><div class="bar"><i style="width:${pct}%"></i></div></div>
+    <div class="tabs">${Object.keys(LEVELS).map(l=>`<button class="tab ${l===curLv?"on":""}" style="--ac:${LEVELS[l].color}" data-act="lv" data-lv="${l}">${l}</button>`).join("")}</div>
+    <div class="world">${art(curLv)}<div class="cap"><h2>${L.title}</h2><small>${L.sub} ・ ★ ${total}/${sts.length*3}</small></div></div>
+    <div class="path">${sts.map(s=>{
+      const isBoss=s.type==="boss",T=TYPES[s.type],n=isBoss?Math.min(8,Q.filter(q=>q.lv===curLv).length):qsOf(curLv,s.type).length,st=S.stars[s.id]||0;
+      return `<button class="stage ${isBoss?"boss":""} ${st?"done":""}" data-act="stage" data-id="${s.id}">
+        <span class="node">${isBoss?"👹":T.icon}</span>
+        <span class="si"><b>${isBoss?curLv+" 模擬試験":T.jp}</b><small>${isBoss?"全題型ランダム 8 問・ライフ 4":T.zh+" ・ "+n+"問"}</small></span>
+        <span class="st">${"★".repeat(st)}${"☆".repeat(3-st)}</span></button>`}).join("")}</div>
+    <div class="sub"><button class="btn ghost" data-act="review">📒 復習 (${S.wrong.length})</button><button class="btn ghost" data-act="settings">⚙ 設定</button></div>
+    <p class="tip" style="text-align:center;margin-top:18px">題目為依 JLPT 官方題型自行編寫的原創練習題，非官方真題。</p>
+  </div>`;
+}
+function openSheet(){
+  const el=document.createElement("div");el.className="sheet";el.id="sheet";
+  const seg=(k,opts)=>`<div class="seg">${opts.map(o=>`<button class="${String(S.set[k])===String(o[0])?"on":""}" data-act="set" data-k="${k}" data-v="${o[0]}">${o[1]}</button>`).join("")}</div>`;
+  el.innerHTML=`<div class="in"><h3>設定</h3>
+    <div class="row2"><div>モード<small>練習：可重聽、顯示文字　本番：只聽一次、選項只有號碼</small></div>${seg("mode",[["practice","練習"],["exam","本番"]])}</div>
+    <div class="row2"><div>音聲の速さ<small>ゆっくり＝生成較慢速的聲音</small></div>${seg("slow",[["false","ふつう"],["true","ゆっくり"]])}</div>
+    <div class="row2"><div>自動再生<small>進入題目後自動播放</small></div>${seg("auto",[["true","ON"],["false","OFF"]])}</div>
+    <div class="row2"><div>音聲モデル<small>自動：先用 gpt-4o-mini-tts，失敗就改用 tts-1-hd</small></div>${seg("ttsPref",[["auto","自動"],["mini","mini"],["hd","hd"]])}</div>
+    <div class="row2"><div>OpenAI Key<small>${KEY?"已設定 ("+KEY.slice(0,7)+"…"+KEY.slice(-4)+")":"未設定"}</small></div><button class="btn ghost" data-act="rekey" style="padding:8px 12px;font-size:13px">変更</button></div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn block" data-act="testaudio">🔊 音聲テスト</button><button class="btn ghost block" data-act="closeSheet">閉じる</button></div>
+    <div class="row2" style="border:0;margin-top:6px"><div><small>進度重置</small></div><button class="btn ghost" data-act="reset" style="padding:8px 12px;font-size:13px">リセット</button></div>
+    <p class="tip">📱 iPhone：請關掉側邊靜音開關，並把音量調大，否則網頁音聲可能沒有聲音。<br>聽不到聲音時，先按「音聲テスト」確認。</p></div>`;
+  el.addEventListener("click",e=>{if(e.target===el)closeSheet()});
+  document.body.appendChild(el);
+}
+function closeSheet(){const s=$("#sheet");if(s)s.remove()}
+
+/* ---------- 畫面：題目 ---------- */
+function hearts(){return "❤️".repeat(Math.max(0,run.hearts))+"🖤".repeat(run.max-Math.max(0,run.hearts))}
+function renderQuiz(){
+  const qi=run.qs[run.i],T=TYPES[qi.type],L=LEVELS[run.lv]||LEVELS.N3,exam=S.set.mode==="exam";
+  const hideTxt=exam&&T.audio;
+  run.locked=false;
+  app.innerHTML=`<div style="--ac:${L.color}">
+    <div class="qtop"><button class="x" data-act="quit">✕</button>
+      <div class="dots">${run.qs.map((_,i)=>`<i class="${run.res[i]===true?"ok":run.res[i]===false?"ng":i===run.i?"cur":""}"></i>`).join("")}</div>
+      <div class="hearts" id="hearts">${hearts()}</div></div>
+    <div class="qcard">
+      <div class="qtype">${T.icon} ${T.jp}<small>${T.zh}</small></div>
+      ${qi.type==="utter"?`<div class="sit">${qi.ask}</div>`:""}
+      <button class="pbtn" id="pbtn" data-act="play">▶ 聞く</button>
+      <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="astat" id="astat"></div>
+      ${!exam&&(qi.type==="task"||qi.type==="point"||qi.type==="gist"||qi.type==="integ")?`<div class="qtext">❓ ${qi.ask}</div>`:""}
+    </div>
+    <div class="opts" id="opts">${qi.opts.map((o,i)=>`<button class="opt" data-act="ans" data-i="${i}"><b>${i+1}</b><span>${hideTxt?"🎧 "+(i+1)+"番":o}</span></button>`).join("")}</div>
+    <div id="fb"></div></div>`;
+  setAudio("idle");
+  if(S.set.auto)playQ(qi);
+  const nx=run.qs[run.i+1];
+  if(nx&&KEY)pool(nx.parts,3,p=>getBuf(p,run.lv).catch(()=>{})).catch(()=>{});
+}
+function setAudio(st,msg){
+  audioState=st;
+  const b=$("#pbtn"),w=$("#wave"),a=$("#astat");if(!b)return;
+  const exam=S.set.mode==="exam";
+  w.classList.toggle("on",st==="playing");
+  a.classList.toggle("err",st==="error");
+  b.disabled=false;
+  if(st==="idle"){b.textContent="▶ 聞く";a.textContent=exam?"本番モード：音聲は一度だけ":""}
+  else if(st==="loading"){b.textContent="⏳ 音聲を準備中…";b.disabled=true;a.textContent="初回は音聲生成に数秒かかります"}
+  else if(st==="playing"){b.textContent="■ 停止";a.textContent="再生中…"}
+  else if(st==="done"){a.textContent="聞き終わりました。答えを選んでください";if(exam&&!run.locked){b.textContent="🔒 本番は一度だけ";b.disabled=true}else b.textContent="↻ もう一度聞く"}
+  else if(st==="gesture"){b.textContent="▶ タップして再生";a.textContent="ブラウザの制限のため、タップで再生してください"}
+  else if(st==="error"){b.textContent="▶ もう一度";a.textContent=msg||"エラー"}
+}
+async function playQ(qi){
+  const my=++playToken;stopSrc();
+  kick();setAudio("loading");
+  try{
+    const fin=await playParts(qi.parts,run.lv,my,()=>setAudio("playing"));
+    if(my!==playToken)return;
+    if(fin)setAudio("done");
+  }catch(e){
+    if(my!==playToken)return;
+    if(e.message==="NEEDGESTURE")setAudio("gesture");else setAudio("error",e.message);
+  }
+}
+function scriptHTML(qi){
+  const row=(w,t)=>`<div class="sl"><i class="${w==="N"?"n":w[0]==="F"?"f":"m"}">${LAB[w]}</i><span>${t}</span></div>`;
+  let h="";
+  if(qi.type==="quick"){h+=row(qi.lines[0][0],qi.lines[0][1]);qi.opts.forEach((o,i)=>h+=row(qi.rv||"F",(i+1)+". "+o))}
+  else if(qi.type==="utter"){h+=row("N",qi.ask);qi.opts.forEach((o,i)=>h+=row(qi.rv||"F",(i+1)+". "+o))}
+  else{
+    const first=qi.type==="task"||qi.type==="point";
+    if(qi.intro)h+=row("N",qi.intro);
+    if(first)h+=row("N",qi.ask);
+    (qi.lines||[]).forEach(l=>h+=row(l[0],l[1]));
+    if(!first)h+=row("N",qi.ask);
+  }
+  return h;
+}
+function answer(i){
+  if(!run||run.locked)return;
+  run.locked=true;playToken++;stopSrc();
+  const qi=run.qs[run.i],ok=i===qi.ans,exam=S.set.mode==="exam";
+  S.answered++;if(ok)S.correct++;
+  let gain=0;
+  if(ok){run.correct++;run.streak++;gain=10+(exam?5:0)+(run.streak>=3?5:0);run.xp+=gain;S.xp+=gain;S.wrong=S.wrong.filter(x=>x!==qi.id)}
+  else{run.streak=0;run.hearts--;if(!S.wrong.includes(qi.id))S.wrong.push(qi.id)}
+  run.res[run.i]=ok;save();
+  document.querySelectorAll(".opt").forEach((b,k)=>{
+    b.classList.add("lock");
+    b.querySelector("span").textContent=qi.opts[k];
+    if(k===qi.ans)b.classList.add("ok");else if(k===i)b.classList.add("ng");else b.classList.add("dim");
   });
-
-  const correctionHTML = corrLines.length > 0
-    ? `<div class="correction-title">フィードバック</div>` + corrLines.map(l => `<div>${esc(l)}</div>`).join('')
-    : '';
-
-  return { mainText: mainLines.join('\n').trim(), correctionHTML };
+  $("#hearts").innerHTML=hearts();
+  const last=run.i>=run.qs.length-1||run.hearts<=0;
+  $("#fb").innerHTML=`<div class="fb ${ok?"ok":"ng"}">
+    <div class="fbh">${ok?"🎉 正解！":"💥 ざんねん…"}${gain?` <small style="color:var(--gold)">+${gain}XP</small>`:""}</div>
+    <div class="fba">正解：<b>${qi.ans+1}. ${qi.opts[qi.ans]}</b></div>
+    <div class="script">${scriptHTML(qi)}</div>
+    <div class="exp">💡 ${qi.exp}</div>
+    <div class="fbb"><button class="btn ghost" data-act="replay">🔊 原文を見ながら聞く</button><button class="btn" data-act="next">${last?"結果へ":"次へ"} ▶</button></div></div>`;
+  $("#fb").scrollIntoView({behavior:"smooth",block:"nearest"});
+  const dots=document.querySelectorAll(".dots i");if(dots[run.i])dots[run.i].className=ok?"ok":"ng";
+  setAudio("done");
 }
-
-function formatText(t) {
-  // Furigana: 漢字（ふりがな）
-  t = t.replace(/([^\x00-\x7F\s、。！？…「」『』【】\n]+)（([ぁ-ん]+)）/g, '<ruby>$1<rt>$2</rt></ruby>');
-  // Bold
-  t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  return t;
+function nextQ(){
+  playToken++;stopSrc();
+  if(run.hearts<=0||run.i>=run.qs.length-1)return finishRun();
+  run.i++;renderQuiz();window.scrollTo(0,0);
 }
-
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function finishRun(){
+  const n=run.qs.length,acc=run.correct/n,failed=run.hearts<=0;
+  const stars=failed?0:acc>=0.9?3:acc>=0.7?2:1;
+  const bonus=failed?0:(run.id.endsWith("boss")?30:20);
+  S.xp+=bonus;
+  if(run.id!=="review"&&stars>(S.stars[run.id]||0))S.stars[run.id]=stars;
+  save();
+  const msg=run.id==="review"?(failed?"もう少し！":"復習完了！"):failed?"ライフがなくなった…":stars===3?"パーフェクト！":stars===2?"いい調子！":"クリア！";
+  app.innerHTML=`<div class="res" style="--ac:${(LEVELS[run.lv]||LEVELS.N3).color}">
+    <div class="big">${failed?"💔":"★".repeat(stars)+"☆".repeat(3-stars)}</div>
+    <h2>${msg}</h2><small>${run.title}</small>
+    <div class="stat"><div><b>${run.correct}/${n}</b><small>正解</small></div><div><b>${Math.round(acc*100)}%</b><small>正答率</small></div><div><b>+${run.xp+bonus}</b><small>XP</small></div></div>
+    <button class="btn block" data-act="retry">↻ もう一度</button>
+    ${run.id!=="review"&&!failed&&nextStageOf(run.id)?`<button class="btn block" data-act="nextstage">次のステージ ▶</button>`:""}
+    <button class="btn ghost block" data-act="home">ホームへ</button></div>`;
+  window.scrollTo(0,0);
 }
+function nextStageOf(id){const lv=id.split("-")[0],a=stagesOf(lv),i=a.findIndex(s=>s.id===id);return a[i+1]||null}
 
-let _thinkEl = null;
-function showThinking() {
-  const feed = document.getElementById('feed');
-  const d = document.createElement('div');
-  d.className = 'msg sensei'; d.id = '_think';
+/* ---------- 事件 ---------- */
+const H={
+  start(){const v=$("#keyin").value.trim();if(!v.startsWith("sk-")){toast("OpenAI Key は sk- で始まります");return}KEY=v;LS.set("jq_key",KEY);touchDay();kick();renderHome()},
+  lv(el){curLv=el.dataset.lv;LS.set("jq_lv",curLv);renderHome()},
+  stage(el){kick();startStage(el.dataset.id)},
+  review(){kick();startReview()},
+  settings(){openSheet()},
+  closeSheet(){closeSheet()},
+  set(el){const k=el.dataset.k;let v=el.dataset.v;if(v==="true")v=true;else if(v==="false")v=false;S.set[k]=v;save();closeSheet();openSheet()},
+  rekey(){closeSheet();renderSetup()},
+  async testaudio(){
+    kick();toast("音聲を生成しています…",6000);const my=++playToken;
+    try{await playParts([{v:"F",t:"こんにちは。聴解クエストへようこそ。",gap:0.5},{v:"M",t:"音聲は聞こえますか。",gap:0.3}],"N3",my);toast("🔊 テスト完了。聞こえましたか？")}
+    catch(e){toast(e.message==="NEEDGESTURE"?"ブラウザが音聲をブロックしました。もう一度タップしてください":e.message,5000)}
+  },
+  reset(){if(confirm("星・XP・復習ノートをすべてリセットしますか？")){S=fresh();save();closeSheet();touchDay();renderHome()}},
+  quit(){if(confirm("中断しますか？（この回の進行は保存されません）")){playToken++;stopSrc();run=null;renderHome()}},
+  play(){
+    const qi=run.qs[run.i];
+    if(audioState==="playing"){playToken++;stopSrc();setAudio("done");return}
+    playQ(qi);
+  },
+  ans(el){answer(+el.dataset.i)},
+  next(){nextQ()},
+  replay(){const my=++playToken;kick();stopSrc();const qi=run.qs[run.i];playParts(qi.parts,run.lv,my,()=>setAudio("playing")).then(f=>{if(f&&my===playToken)setAudio("done")}).catch(e=>{if(my===playToken)setAudio(e.message==="NEEDGESTURE"?"gesture":"error",e.message)})},
+  retry(){if(run.id==="review")startReview();else startStage(run.id)},
+  nextstage(){const n=nextStageOf(run.id);if(n)startStage(n.id);else renderHome()},
+  home(){run=null;renderHome()}
+};
+document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)return;const f=H[el.dataset.act];if(f)f(el,e)});
 
-  const av = document.createElement('div');
-  av.className = 'avatar s'; av.textContent = '先';
-
-  const t = document.createElement('div');
-  t.className = 'thinking';
-  ['','',''].forEach(() => { const dot=document.createElement('div'); dot.className='t-dot'; t.appendChild(dot); });
-
-  d.appendChild(av); d.appendChild(t);
-  feed.appendChild(d);
-  feed.scrollTop = feed.scrollHeight;
-  _thinkEl = d;
-}
-
-function removeThinking() {
-  document.getElementById('_think')?.remove();
-  _thinkEl = null;
-}
-
-function setStatus(txt, mode) {
-  document.getElementById('s-txt').textContent = txt;
-  const d = document.getElementById('s-dot');
-  d.className = 'status-dot' + (mode ? ' '+mode : '');
-}
-
-function clearChat() {
-  stopAudio();
-  history = [];
-  sessionStarted = false;
-  document.getElementById('feed').innerHTML =
-    `<div class="empty-feed" id="empty"><div class="empty-kanji">先</div><div class="empty-text">マイクボタンを押して<br>先生と話しましょう</div></div>`;
-  setStatus('準備完了','');
-  // Restart lesson
-  sessionStarted = true;
-  startLesson();
-}
-
-let _tt;
-function toast(msg, type='') {
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
-  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
-}
+/* ---------- 起動 ---------- */
+if(KEY){touchDay();renderHome()}else renderSetup();
 </script>
 </body>
 </html>
