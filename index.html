@@ -158,6 +158,15 @@ small{color:var(--mute)}
 .dk .wrow .t{flex:1;cursor:pointer}
 .dk .wrow .t b{font-family:var(--serif);font-size:17px}
 .dk .wrow .t small{display:block;color:var(--mute);font-size:12.5px}
+.coach{background:linear-gradient(135deg,#2a2150,#1c2a4d);border:1px solid var(--gold);border-radius:18px;padding:12px 14px;margin:0 0 12px}
+.coach .r1{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.coach b{font-size:16px}
+.coach small{display:block;color:var(--mute);font-size:12.5px;line-height:1.5;margin-top:2px}
+.coach .btn{padding:9px 14px;font-size:14px;flex:none}
+.coach .lnk{font-size:12.5px;color:var(--gold);margin-top:8px;display:inline-block;cursor:pointer;text-decoration:underline}
+.tnote{background:#f2c14e14;border:1px solid #f2c14e55;border-radius:12px;padding:8px 12px;font-size:13px;line-height:1.7;margin:8px 0}
+.rep .bar2{height:8px;background:var(--bg);border-radius:6px;overflow:hidden;margin:3px 0 8px}
+.rep .bar2 i{display:block;height:100%;background:var(--ac,var(--gold))}
 .exp{font-size:14px;line-height:1.75;color:#dfe3f7;margin:8px 0 14px}
 .fbb{display:flex;gap:10px}.fbb .btn{flex:1;font-size:14px;padding:12px 8px}
 
@@ -697,9 +706,10 @@ function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("s
 
 /* ---------- 狀態 ---------- */
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
-const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",set:Object.assign({},DEF_SET)});
+const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
 S.set=Object.assign({},DEF_SET,S.set||{});
+S.wst=S.wst||{};S.tstat=S.tstat||{};S.words=S.words||[];
 let KEY=LS.get("jq_key","");
 let curLv=LS.get("jq_lv","N3");
 if(!LEVELS[curLv])curLv="N3";
@@ -810,6 +820,7 @@ function prep(q){
 function startRun(id,qs,hearts,title){
   if(!qs.length){toast("このステージにはまだ問題がありません");return}
   run={id,lv:id.split("-")[0],title,qs:qs.map(prep),i:0,hearts,max:hearts,correct:0,xp:0,streak:0,res:[],locked:false};
+  if(!LEVELS[run.lv])run.lv=curLv;
   renderQuiz();
 }
 function startStage(id){
@@ -854,6 +865,7 @@ function renderHome(){
     <div class="hd"><div class="brand">聴解<b>クエスト</b></div>
       <div class="chips"><span class="chip">🔥 ${S.streakDays}日</span><span class="chip">⭐ ${S.xp}</span></div></div>
     <div class="rank"><div class="row"><b>${rk.name}</b><small>${rk.next?S.xp+" / "+rk.next+" XP":"MAX"}</small></div><div class="bar"><i style="width:${pct}%"></i></div></div>
+    ${coachCard()}
     <div class="tabs">${Object.keys(LEVELS).map(l=>`<button class="tab ${l===curLv?"on":""}" style="--ac:${LEVELS[l].color}" data-act="lv" data-lv="${l}">${l}</button>`).join("")}</div>
     <div class="world">${art(curLv)}<div class="cap"><h2>${L.title}</h2><small>${L.sub} ・ ★ ${total}/${sts.length*3}</small></div></div>
     <div class="path">${sts.map(s=>{
@@ -963,9 +975,11 @@ function answer(i){
   run.locked=true;playToken++;stopSrc();
   const qi=run.qs[run.i],ok=i===qi.ans,exam=S.set.mode==="exam";
   S.answered++;if(ok)S.correct++;
+  if(qi.gen){(qi.targets||[]).forEach(w=>wsResult(w,ok))}
+  else{const tk=qi.lv+"|"+qi.type,ts=S.tstat[tk]||(S.tstat[tk]={n:0,ok:0});ts.n++;if(ok)ts.ok++;if(!ok)(V[qi.id]||[]).forEach(v=>wsWeak(v[0],v[1],v[2],v[3]))}
   let gain=0;
   if(ok){run.correct++;run.streak++;gain=10+(exam?5:0)+(run.streak>=3?5:0);run.xp+=gain;S.xp+=gain;S.wrong=S.wrong.filter(x=>x!==qi.id)}
-  else{run.streak=0;run.hearts--;if(!S.wrong.includes(qi.id))S.wrong.push(qi.id)}
+  else{run.streak=0;run.hearts--;if(!qi.gen&&!S.wrong.includes(qi.id))S.wrong.push(qi.id)}
   run.res[run.i]=ok;save();
   document.querySelectorAll(".opt").forEach((b,k)=>{
     b.classList.add("lock");
@@ -979,6 +993,7 @@ function answer(i){
     <div class="fba">正解：<b>${qi.ans+1}. ${qi.opts[qi.ans]}</b></div>
     <div class="script">${scriptHTML(qi)}</div>
     ${imgHTML(qi,"after")}
+    ${qi.gen?trainNote(qi):""}
     <div class="exp">💡 ${qi.exp}</div>
     ${vocabHTML(qi)}
     <div class="fbb"><button class="btn ghost" data-act="replay">🔊 原文を見ながら聞く</button><button class="btn" data-act="next">${last?"結果へ":"次へ"} ▶</button></div></div>`;
@@ -996,15 +1011,15 @@ function finishRun(){
   const stars=failed?0:acc>=0.9?3:acc>=0.7?2:1;
   const bonus=failed?0:(run.id.endsWith("boss")?30:20);
   S.xp+=bonus;
-  if(run.id!=="review"&&stars>(S.stars[run.id]||0))S.stars[run.id]=stars;
+  if(!SPECIAL(run.id)&&stars>(S.stars[run.id]||0))S.stars[run.id]=stars;
   save();
-  const msg=run.id==="review"?(failed?"もう少し！":"復習完了！"):failed?"ライフがなくなった…":stars===3?"パーフェクト！":stars===2?"いい調子！":"クリア！";
+  const msg=SPECIAL(run.id)?(failed?"もう少し！":"お疲れさま！"):failed?"ライフがなくなった…":stars===3?"パーフェクト！":stars===2?"いい調子！":"クリア！";
   app.innerHTML=`<div class="res" style="--ac:${(LEVELS[run.lv]||LEVELS.N3).color}">
     <div class="big">${failed?"💔":"★".repeat(stars)+"☆".repeat(3-stars)}</div>
     <h2>${msg}</h2><small>${run.title}</small>
     <div class="stat"><div><b>${run.correct}/${n}</b><small>正解</small></div><div><b>${Math.round(acc*100)}%</b><small>正答率</small></div><div><b>+${run.xp+bonus}</b><small>XP</small></div></div>
     <button class="btn block" data-act="retry">↻ もう一度</button>
-    ${run.id!=="review"&&!failed&&nextStageOf(run.id)?`<button class="btn block" data-act="nextstage">次のステージ ▶</button>`:""}
+    ${!SPECIAL(run.id)&&!failed&&nextStageOf(run.id)?`<button class="btn block" data-act="nextstage">次のステージ ▶</button>`:""}
     <button class="btn ghost block" data-act="home">ホームへ</button></div>`;
   window.scrollTo(0,0);
 }
@@ -1066,7 +1081,7 @@ function wordCard(d){
   ${(d.usages||[]).map(u=>`<div class="us"><small>${esc(u.scene||"")}</small> ${sayBtn(u.ja||"")}<br>${tapWrap(u.ja||"")}<i>${esc(u.zh||"")}</i></div>`).join("")}
   ${d.nuance?`<h4>💡 語感・注意</h4><div class="nt">${esc(d.nuance)}</div>`:""}
   ${(d.similar&&d.similar.length)?`<h4>↔ 似ている語</h4>${d.similar.map(s=>`<div class="nt"><b class="tw" data-act="word" data-w="${esc(s.w)}" data-c="">${esc(s.w)}</b>：${esc(s.diff||"")}</div>`).join("")}`:""}
-  <div class="acts"><button class="btn ghost" data-act="dsave" data-w="${esc(d.word)}" data-r="${esc(d.reading||"")}" data-z="${esc(d.zh||"")}" data-l="${esc(d.jlpt||"")}">${saved?"★ 保存済み":"☆ 単語帳に保存"}</button><button class="btn" data-act="dclose">閉じる</button></div>`;
+  <div class="acts"><button class="btn ghost" data-act="dsave" data-w="${esc(d.word)}" data-r="${esc(d.reading||"")}" data-z="${esc(d.zh||"")}" data-l="${esc(d.jlpt||"")}">${saved?"★ 保存済み":"☆ 単語帳に保存"}</button><button class="btn ghost" data-act="dknow" data-w="${esc(d.word)}" style="flex:0 0 auto">✓ 知ってた</button><button class="btn" data-act="dclose">閉じる</button></div>`;
 }
 function sentCard(d,text){
   return `<div class="top"><span class="rd" style="font-size:12px">${esc(d.register||"")}</span></div>
@@ -1082,6 +1097,7 @@ async function openDict(mode,text,ctx){
   try{
     const d=await askDict(mode,text,ctx);
     const el=$("#dict");if(!el)return;
+    if(mode==="w")wsNote(d.word,d.reading,d.zh,ctx);
     el.querySelector(".in").innerHTML=mode==="w"?wordCard(d):sentCard(d,text);
   }catch(e){
     const el=$("#dict");if(!el)return;
@@ -1090,11 +1106,124 @@ async function openDict(mode,text,ctx){
 }
 function openWordList(){
   const ws=S.words||[];
-  dictShell(`<h3>📖 単語帳 (${ws.length})</h3>`+(ws.length?ws.map((x,i)=>`<div class="wrow"><div class="t" data-act="wopen" data-w="${esc(x.w)}"><b>${esc(x.w)}</b> <small style="display:inline">${esc(x.reading||"")}　${esc(x.jlpt||"")}</small><small>${esc(x.zh||"")}</small></div><button class="sb" data-act="wdel" data-i="${i}">削除</button></div>`).join(""):`<div class="load">まだありません。<br>答えたあと、文の中の単語をタップして「☆ 単語帳に保存」できます。</div>`)+`<div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`);
+  dictShell(`<h3>📖 単語帳 (${ws.length})</h3>`+(ws.length?ws.map((x,i)=>`<div class="wrow"><div class="t" data-act="wopen" data-w="${esc(x.w)}"><b>${esc(x.w)}</b> <small style="display:inline">${esc(x.reading||"")}　${esc(x.jlpt||"")}　${strength(x.w)}</small><small>${esc(x.zh||"")}</small></div><button class="sb" data-act="wdel" data-i="${i}">削除</button></div>`).join(""):`<div class="load">まだありません。<br>答えたあと、文の中の単語をタップして「☆ 単語帳に保存」できます。</div>`)+`<div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`);
+}
+
+/* ---------- 先生（個人化トレーニング）---------- */
+const SPECIAL=id=>id==="review"||id==="train";
+const DAY=864e5,IVL=[0.5,1,3,7,14,30];
+const strength=w=>{const x=S.wst[w];if(!x)return "";return "●".repeat(x.box)+"○".repeat(5-x.box)};
+function wsNote(w,reading,zh,ctx){
+  const x=S.wst[w]||(S.wst[w]={w,r:reading||"",zh:zh||"",ctx:ctx||"",box:0,due:Date.now(),looks:0,ok:0,ng:0,t:Date.now()});
+  x.looks++;if(reading)x.r=reading;if(zh)x.zh=zh;if(ctx)x.ctx=ctx;
+  if(x.box>=3)x.box-=1;
+  if(x.box<3)x.due=Math.min(x.due,Date.now());
+  x.t=Date.now();save();
+}
+function wsWeak(w,reading,zh,ctx){
+  const x=S.wst[w];
+  if(x){if(x.box>0)x.box--;x.due=Math.min(x.due,Date.now()+DAY*0.25);}
+  else S.wst[w]={w,r:reading||"",zh:zh||"",ctx:ctx||"",box:0,due:Date.now()+DAY*0.25,looks:0,ok:0,ng:1,t:Date.now()};
+}
+function wsResult(w,ok){
+  const x=S.wst[w];if(!x)return;
+  if(ok){x.ok++;x.box=Math.min(5,x.box+1)}else{x.ng++;x.box=0}
+  x.due=Date.now()+IVL[x.box]*DAY;x.t=Date.now();
+}
+const wsDue=()=>Object.values(S.wst).filter(x=>x.box<5&&x.due<=Date.now()).sort((a,b)=>(a.box-b.box)||((b.looks+b.ng)-(a.looks+a.ng))||(a.due-b.due));
+function trainNote(qi){
+  const t=(qi.targets||[]).map(w=>{const x=S.wst[w];if(!x)return "";const d=x.box>=5?"定着しました 🎉":"次は"+(x.box===0?"今日の後で":Math.round(IVL[x.box])+"日後")+"に再登場";return `「${esc(w)}」 ${strength(w)}（${d}）`}).filter(Boolean);
+  return t.length?`<div class="tnote">🎓 先生メモ<br>${t.join("<br>")}</div>`:"";
+}
+function weakType(lv){
+  const ts=LEVELS[lv].types.map(t=>{const s=S.tstat[lv+"|"+t]||{n:0,ok:0};return {t,n:s.n,acc:s.n?s.ok/s.n:1}});
+  const seen=ts.filter(x=>x.n>=3).sort((a,b)=>a.acc-b.acc);
+  if(seen.length&&seen[0].acc<0.85)return seen[0].t;
+  const un=ts.slice().sort((a,b)=>a.n-b.n)[0];
+  return un.n<3?un.t:null;
+}
+function coachCard(){
+  const due=wsDue().length,tot=Object.keys(S.wst).length,wt=weakType(curLv);
+  const sub=tot?`復習したい語：${due}個（記録中 ${tot}個）${wt?"　重点：「"+TYPES[wt].jp+"」":""}`:"単語を調べたり間違えたりすると、先生があなたに合った特訓を作ります。";
+  return `<div class="coach"><div class="r1"><div><b>🎓 今日の特訓</b><small>${sub}</small></div><button class="btn" data-act="train">始める</button></div><span class="lnk" data-act="report">📊 先生のコメント・学習レポート</span></div>`;
+}
+async function chatJSON(sys,user,temp){
+  if(!KEY)throw new Error("OpenAI Key が未設定です");
+  const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+KEY},
+    body:JSON.stringify({model:"gpt-4o-mini",temperature:temp==null?0.7:temp,response_format:{type:"json_object"},messages:[{role:"system",content:sys},{role:"user",content:user}]})});
+  if(!r.ok){let m="";try{m=(await r.json()).error.message}catch(e){}
+    if(r.status===401)throw new Error("Key が無効です（401）");
+    if(r.status===429)throw new Error(/quota|billing/i.test(m)?"クレジットが足りません":"リクエストが多すぎます。少し待ってください");
+    throw new Error("エラー "+r.status);}
+  return JSON.parse((await r.json()).choices[0].message.content);
+}
+const SPK=["F","M","F2","M2"];
+async function genQuestion(words){
+  const lvDesc={N3:"N3（日常会話中心、文は短め）",N2:"N2（職場・ニュース風も含む、やや自然な速さ）",N1:"N1（抽象的な話題や専門的な内容も含む）"}[curLv];
+  const list=words.map(w=>`・${w.w}（${w.zh||""}）${w.ctx?"　前に出てきた文：「"+w.ctx.slice(0,60)+"」":""}`).join("\n");
+  const sys="あなたはJLPT聴解の問題作成者です。日本語学習者（広東語話者）のために、苦手な語を新しい場面で自然に使った聞き取り問題を作ります。JSONのみ返します。";
+  const usr=`レベル：${lvDesc}\n目標語：\n${list}\n\n条件：\n- 目標語を、前に出てきた場面とは違う新しい場面で、会話の中に自然に入れる（活用してもよい）。\n- 会話は4〜6行、現代の自然な話し言葉。話者記号は F, M, F2, M2 のいずれか。\n- 質問は、目標語の意味がわからないと答えにくい内容にする。ただし「この語の意味は？」とは聞かない。\n- 選択肢は4つ、正解は1つ、紛らわしい誤答を含める。\n\nJSON形式：\n{"intro":"場面の説明1文（例：会社で、女の人と男の人が話しています。）","lines":[["F","…"],["M","…"]],"ask":"質問文","opts":["…","…","…","…"],"ans":0,"exp":"繁體中文の解説（なぜその答えか、目標語の意味にも触れる）","vocab":[{"w":"目標語","reading":"ひらがな","zh":"中文","ex":"この問題とは別の例文","exzh":"中文翻譯"}]}`;
+  const d=await chatJSON(sys,usr,0.8);
+  if(!d||!Array.isArray(d.lines)||d.lines.length<3||!Array.isArray(d.opts)||d.opts.length<3||!Number.isInteger(d.ans)||d.ans<0||d.ans>=d.opts.length||!d.ask||!d.intro)throw new Error("bad");
+  if(!d.lines.every(l=>Array.isArray(l)&&SPK.includes(l[0])&&typeof l[1]==="string"))throw new Error("bad");
+  const id="gen-"+Date.now()+"-"+Math.random().toString(36).slice(2,6);
+  V[id]=(d.vocab||[]).map(v=>[v.w,v.reading||"",v.zh||"",v.ex||"",v.exzh||""]);
+  return {id,lv:curLv,type:"point",gen:true,targets:words.map(w=>w.w),intro:d.intro,lines:d.lines,ask:d.ask,opts:d.opts.map(String),ans:d.ans,exp:d.exp||""};
+}
+async function startTraining(){
+  if(!KEY){toast("OpenAI Key が必要です");return}
+  kick();
+  app.innerHTML=`<div class="dk" style="text-align:center;padding:90px 20px"><div style="font-size:44px">🎓</div><h2 style="margin:10px 0">先生が今日の問題を作っています…</h2><small style="color:var(--mute)">あなたの苦手な語を、新しい場面で出題します</small></div>`;
+  const due=wsDue().slice(0,6),gens=[];
+  if(due.length){
+    const groups=[];for(let i=0;i<due.length&&groups.length<3;i+=2)groups.push(due.slice(i,i+2));
+    const res=await Promise.all(groups.map(g=>genQuestion(g).catch(()=>null)));
+    res.forEach(r=>{if(r)gens.push(r)});
+  }
+  const wt=weakType(curLv);
+  let pool0=wt?Q.filter(q=>q.lv===curLv&&q.type===wt):Q.filter(q=>q.lv===curLv);
+  const wf=pool0.filter(q=>S.wrong.includes(q.id)),rest=shuffle(pool0.filter(q=>!S.wrong.includes(q.id)));
+  const need=Math.max(3,6-gens.length);
+  let bank=wf.concat(rest).slice(0,need);
+  if(bank.length<need)bank=bank.concat(shuffle(Q.filter(q=>q.lv===curLv&&!bank.includes(q))).slice(0,need-bank.length));
+  if(!gens.length&&due.length)toast("先生の問題作成に失敗しました。ステージ問題で練習します",4000);
+  startRun("train",shuffle(gens.concat(bank)),5,"今日の特訓");
+}
+async function openReport(){
+  const answered=S.answered,tot=Object.keys(S.wst).length;
+  const types=[];Object.keys(LEVELS).forEach(lv=>LEVELS[lv].types.forEach(t=>{const s=S.tstat[lv+"|"+t];if(s&&s.n)types.push({lv,t,n:s.n,acc:Math.round(s.ok/s.n*100)})}));
+  const words=Object.values(S.wst),mastered=words.filter(x=>x.box>=5).length,due=wsDue().length;
+  const struggle=words.slice().sort((a,b)=>(b.ng+b.looks)-(a.ng+a.looks)).slice(0,8);
+  const bars=types.sort((a,b)=>a.acc-b.acc).map(x=>`<div style="font-size:13px">${x.lv} ${TYPES[x.t].jp} <small style="color:var(--mute)">${x.acc}%（${x.n}問）</small></div><div class="bar2"><i style="width:${x.acc}%"></i></div>`).join("");
+  const base=`<h3>📊 学習レポート</h3><div class="rep">
+    <div class="nt">正解率 ${answered?Math.round(S.correct/answered*100):0}%（${answered}問）　記録中の語 ${tot}個　定着 ${mastered}個　復習待ち ${due}個</div>
+    <h4>題型ごとの正答率</h4>${bars||'<div class="nt">まだデータがありません。</div>'}
+    ${struggle.length?`<h4>つまずいている語</h4>`+struggle.map(x=>`<div class="wrow"><div class="t" data-act="wopen" data-w="${esc(x.w)}"><b>${esc(x.w)}</b> <small style="display:inline">${esc(x.r||"")}　${strength(x.w)}</small><small>${esc(x.zh||"")}</small></div></div>`).join(""):""}
+    <div id="cmt"><div class="load">🎓 先生がコメントを書いています…</div></div></div>
+    <div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`;
+  dictShell(base);
+  if(answered<8&&tot<3){const c=$("#cmt");if(c)c.innerHTML=`<div class="nt" style="margin-top:10px">もう少し練習すると、先生があなたの弱点を分析できます。（目安：8問以上）</div>`;return}
+  const ck="rep|"+answered+"|"+tot+"|"+mastered;
+  let d=DICT[ck];
+  try{
+    if(!d){
+      const sys="あなたは、日本語を学ぶ広東語話者を教える、経験豊富で温かい日本語教師です。データから学習者の傾向を読み取り、繁體中文で、具体的で前向きなアドバイスを書きます。JSONのみ返します。";
+      const usr=`学習データ：\n正解率：${answered?Math.round(S.correct/answered*100):0}%（${answered}問）\n題型別（レベル・題型・正答率・問題数）：${JSON.stringify(types)}\nつまずいている語：${JSON.stringify(struggle.map(x=>({w:x.w,zh:x.zh,調べた:x.looks,誤答:x.ng,定着度:x.box})))}\n定着した語：${mastered}個、復習待ち：${due}個\n\n目標：この学習者は通訳者で、聴解と会話力を伸ばしたい。\nJSON形式：\n{"summary":"全体の印象（2〜3文）","weak":["弱点の分析（具体的に、1〜3個）"],"advice":["具体的な練習方法（シャドーイング、文脈で覚える、言い換えなど教授法に基づく、2〜3個）"],"next":"今日のおすすめ（1文）"}`;
+      d=await chatJSON(sys,usr,0.5);DICT[ck]=d;dictSave();
+    }
+    const c=$("#cmt");if(!c)return;
+    c.innerHTML=`<h4>🎓 先生のコメント</h4><div class="nt">${esc(d.summary||"")}</div>
+      ${(d.weak&&d.weak.length)?`<h4>弱点</h4>${d.weak.map(x=>`<div class="nt">・${esc(x)}</div>`).join("")}`:""}
+      ${(d.advice&&d.advice.length)?`<h4>おすすめの練習</h4>${d.advice.map(x=>`<div class="nt">・${esc(x)}</div>`).join("")}`:""}
+      ${d.next?`<div class="tnote">👉 ${esc(d.next)}</div>`:""}`;
+  }catch(e){const c=$("#cmt");if(c)c.innerHTML=`<div class="load">⚠ ${esc(e.message)}</div>`}
 }
 
 /* ---------- 事件 ---------- */
 const H={
+  train(){startTraining()},
+  report(){openReport()},
+  dknow(el){const x=S.wst[el.dataset.w];if(x){x.box=5;x.due=Date.now()+IVL[5]*DAY;save()}toast("了解！もう出題しません 👍");},
   word(el){openDict("w",el.dataset.w,el.dataset.c||"")},
   sent(el){openDict("s",el.dataset.c,"")},
   dclose(){closeDict()},
@@ -1131,7 +1260,7 @@ const H={
   ans(el){answer(+el.dataset.i)},
   next(){nextQ()},
   replay(){const my=++playToken;kick();stopSrc();const qi=run.qs[run.i];playParts(qi.parts,run.lv,my,()=>setAudio("playing")).then(f=>{if(f&&my===playToken)setAudio("done")}).catch(e=>{if(my===playToken)setAudio(e.message==="NEEDGESTURE"?"gesture":"error",e.message)})},
-  retry(){if(run.id==="review")startReview();else startStage(run.id)},
+  retry(){if(run.id==="review")startReview();else if(run.id==="train")startTraining();else startStage(run.id)},
   nextstage(){const n=nextStageOf(run.id);if(n)startStage(n.id);else renderHome()},
   home(){run=null;renderHome()}
 };
