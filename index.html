@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>聴解クエスト</title>
+<meta name="apple-mobile-web-app-title" content="聴解クエスト">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -171,6 +175,8 @@ small{color:var(--mute)}
 .jpbig.hid{filter:blur(9px);user-select:none}
 @keyframes recpulse{0%,100%{box-shadow:0 0 0 0 #ef5b4588}50%{box-shadow:0 0 0 14px #ef5b4500}}
 .recing{animation:recpulse 1.1s infinite}
+.ver{font-size:11px;font-weight:700;color:var(--mute);margin-left:8px;letter-spacing:.04em;vertical-align:middle;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:1px 7px}
+.ver2{color:var(--gold);font-weight:700}
 .exp{font-size:14px;line-height:1.75;color:#dfe3f7;margin:8px 0 14px}
 .fbb{display:flex;gap:10px}.fbb .btn{flex:1;font-size:14px;padding:12px 8px}
 
@@ -709,6 +715,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
 
 /* ---------- 狀態 ---------- */
+const APP_VERSION="2.4.0",APP_DATE="2026-11-08";
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
 const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
@@ -853,7 +860,7 @@ function art(lv){
 function renderSetup(){
   app.innerHTML=`<div class="setup">
     <div class="logo">聴解<b>クエスト</b></div>
-    <div class="tag">JLPT LISTENING QUEST</div>
+    <div class="tag">JLPT LISTENING QUEST</div><div class="tag" style="margin-top:2px">v${APP_VERSION}</div>
     <div class="panel">
       <label>OPENAI API KEY（音聲用）</label>
       <input id="keyin" class="inp" type="password" placeholder="sk-..." autocomplete="off" value="${KEY||""}">
@@ -866,7 +873,7 @@ function renderHome(){
   const pct=rk.next?Math.min(100,Math.round((S.xp-rk.cur)/(rk.next-rk.cur)*100)):100;
   const total=sts.reduce((a,s)=>a+(S.stars[s.id]||0),0);
   app.innerHTML=`<div style="--ac:${L.color}">
-    <div class="hd"><div class="brand">聴解<b>クエスト</b></div>
+    <div class="hd"><div class="brand">聴解<b>クエスト</b><small class="ver">v${APP_VERSION}</small></div>
       <div class="chips"><span class="chip">🔥 ${S.streakDays}日</span><span class="chip">⭐ ${S.xp}</span></div></div>
     <div class="rank"><div class="row"><b>${rk.name}</b><small>${rk.next?S.xp+" / "+rk.next+" XP":"MAX"}</small></div><div class="bar"><i style="width:${pct}%"></i></div></div>
     ${coachCard()}
@@ -880,7 +887,7 @@ function renderHome(){
         <span class="si"><b>${isBoss?curLv+" 模擬試験":T.jp}</b><small>${isBoss?"全題型ランダム 8 問・ライフ 4":T.zh+" ・ "+n+"問"}</small></span>
         <span class="st">${"★".repeat(st)}${"☆".repeat(3-st)}</span></button>`}).join("")}</div>
     <div class="sub"><button class="btn ghost" data-act="review">📒 復習 (${S.wrong.length})</button><button class="btn ghost" data-act="words">📖 単語帳 (${(S.words||[]).length})</button><button class="btn ghost" data-act="settings">⚙ 設定</button></div>
-    <p class="tip" style="text-align:center;margin-top:18px">題目為依 JLPT 官方題型自行編寫的原創練習題，非官方真題。</p>
+    <p class="tip" style="text-align:center;margin-top:18px">題目為依 JLPT 官方題型自行編寫的原創練習題，非官方真題。<br><span class="ver2">バージョン v${APP_VERSION}（${APP_DATE}）</span></p>
   </div>`;
 }
 function openSheet(){
@@ -894,7 +901,7 @@ function openSheet(){
     <div class="row2"><div>OpenAI Key<small>${KEY?"已設定 ("+KEY.slice(0,7)+"…"+KEY.slice(-4)+")":"未設定"}</small></div><button class="btn ghost" data-act="rekey" style="padding:8px 12px;font-size:13px">変更</button></div>
     <div style="display:flex;gap:10px;margin-top:16px"><button class="btn block" data-act="testaudio">🔊 音聲テスト</button><button class="btn ghost block" data-act="closeSheet">閉じる</button></div>
     <div class="row2" style="border:0;margin-top:6px"><div><small>進度重置</small></div><button class="btn ghost" data-act="reset" style="padding:8px 12px;font-size:13px">リセット</button></div>
-    <p class="tip">📱 iPhone：請關掉側邊靜音開關，並把音量調大，否則網頁音聲可能沒有聲音。<br>聽不到聲音時，先按「音聲テスト」確認。</p></div>`;
+    <p class="tip" style="margin-bottom:4px">バージョン v${APP_VERSION}（${APP_DATE}）</p><p class="tip">📱 iPhone：請關掉側邊靜音開關，並把音量調大，否則網頁音聲可能沒有聲音。<br>聽不到聲音時，先按「音聲テスト」確認。</p></div>`;
   el.addEventListener("click",e=>{if(e.target===el)closeSheet()});
   document.body.appendChild(el);
 }

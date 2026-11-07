@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b4bb7"/><stop offset="0.55" stop-color="#b479c9"/><stop offset="1" stop-color="#f7a8c4"/>
+    </linearGradient>
+    <radialGradient id="face" cx="0.4" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffeef3"/>
+    </radialGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd966"/><stop offset="1" stop-color="#f2b134"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- stars / sparkles -->
+  <g fill="#fff" opacity="0.85">
+    <circle cx="70" cy="80" r="5"/><circle cx="440" cy="64" r="4"/><circle cx="470" cy="190" r="3.5"/><circle cx="48" cy="210" r="3.5"/><circle cx="410" cy="440" r="4"/><circle cx="90" cy="450" r="3"/>
+    <path d="M410 120 l6 16 16 6 -16 6 -6 16 -6 -16 -16 -6 16 -6z"/>
+    <path d="M90 140 l4 11 11 4 -11 4 -4 11 -4 -11 -11 -4 11 -4z"/>
+  </g>
+  <!-- petals -->
+  <g fill="#ffd1e0" opacity="0.9">
+    <ellipse cx="445" cy="330" rx="13" ry="8" transform="rotate(30 445 330)"/>
+    <ellipse cx="62" cy="330" rx="11" ry="7" transform="rotate(-25 62 330)"/>
+    <ellipse cx="380" cy="470" rx="10" ry="6" transform="rotate(50 380 470)"/>
+  </g>
+  <!-- headphone band -->
+  <path d="M108 292 C108 120 404 120 404 292" fill="none" stroke="url(#band)" stroke-width="30" stroke-linecap="round"/>
+  <!-- body -->
+  <ellipse cx="256" cy="420" rx="92" ry="42" fill="#ffffff" opacity="0.0"/>
+  <!-- face -->
+  <ellipse cx="256" cy="300" rx="148" ry="136" fill="url(#face)"/>
+  <ellipse cx="256" cy="300" rx="148" ry="136" fill="none" stroke="#e7c3d0" stroke-width="4"/>
+  <!-- ear cups -->
+  <rect x="82" y="248" width="56" height="104" rx="28" fill="url(#band)"/>
+  <rect x="374" y="248" width="56" height="104" rx="28" fill="url(#band)"/>
+  <rect x="96" y="268" width="28" height="64" rx="14" fill="#f7a8c4"/>
+  <rect x="388" y="268" width="28" height="64" rx="14" fill="#f7a8c4"/>
+  <!-- eyes -->
+  <ellipse cx="206" cy="292" rx="20" ry="26" fill="#2b2250"/>
+  <ellipse cx="306" cy="292" rx="20" ry="26" fill="#2b2250"/>
+  <circle cx="213" cy="281" r="8" fill="#fff"/><circle cx="313" cy="281" r="8" fill="#fff"/>
+  <circle cx="200" cy="303" r="4" fill="#fff"/><circle cx="300" cy="303" r="4" fill="#fff"/>
+  <!-- cheeks -->
+  <ellipse cx="164" cy="336" rx="26" ry="16" fill="#ff9db8" opacity="0.75"/>
+  <ellipse cx="348" cy="336" rx="26" ry="16" fill="#ff9db8" opacity="0.75"/>
+  <!-- mouth -->
+  <path d="M232 340 Q256 372 280 340 Q256 352 232 340z" fill="#e0587c" stroke="#e0587c" stroke-width="6" stroke-linejoin="round"/>
+  <!-- sound waves + note -->
+  <g fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity="0.95">
+    <path d="M452 226 Q472 252 452 278"/>
+    <path d="M472 204 Q504 252 472 300" opacity="0.7"/>
+  </g>
+  <g fill="#fff">
+    <ellipse cx="62" cy="262" rx="13" ry="10"/><rect x="70" y="214" width="6" height="48"/><path d="M70 214 q22 4 22 24 q-14 -12 -22 -10z"/>
+  </g>
+</svg>

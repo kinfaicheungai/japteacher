@@ -1,0 +1,13 @@
+{
+  "name": "聴解クエスト",
+  "short_name": "聴解クエスト",
+  "description": "JLPT 聽力闖關遊戲",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0e1226",
+  "theme_color": "#0e1226",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
