@@ -715,16 +715,16 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
 
 /* ---------- 狀態 ---------- */
-const APP_VERSION="2.4.0",APP_DATE="2026-11-08";
+const APP_VERSION="2.5.0",APP_DATE="2026-11-08";
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
-const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wst:{},tstat:{},set:Object.assign({},DEF_SET)});
+const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wtomb:{},wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
 S.set=Object.assign({},DEF_SET,S.set||{});
-S.wst=S.wst||{};S.tstat=S.tstat||{};S.words=S.words||[];
+S.wst=S.wst||{};S.tstat=S.tstat||{};S.words=S.words||[];S.wtomb=S.wtomb||{};
 let KEY=LS.get("jq_key","");
 let curLv=LS.get("jq_lv","N3");
 if(!LEVELS[curLv])curLv="N3";
-const save=()=>LS.set("jq_state",S);
+const save=()=>{LS.set("jq_state",S);if(typeof syncSoon==="function")syncSoon()};
 function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function touchDay(){const n=new Date(),t=ymd(n);if(S.lastDay===t)return;const y=new Date(n.getTime()-864e5);S.streakDays=S.lastDay===ymd(y)?S.streakDays+1:1;S.lastDay=t;save()}
 const rankOf=xp=>{let i=0;RANKS.forEach((r,k)=>{if(xp>=r[0])i=k});return{i,name:RANKS[i][1],cur:RANKS[i][0],next:RANKS[i+1]?RANKS[i+1][0]:null}};
@@ -899,6 +899,7 @@ function openSheet(){
     <div class="row2"><div>自動再生<small>進入題目後自動播放</small></div>${seg("auto",[["true","ON"],["false","OFF"]])}</div>
     <div class="row2"><div>音聲モデル<small>自動：先用 gpt-4o-mini-tts，失敗就改用 tts-1-hd</small></div>${seg("ttsPref",[["auto","自動"],["mini","mini"],["hd","hd"]])}</div>
     <div class="row2"><div>OpenAI Key<small>${KEY?"已設定 ("+KEY.slice(0,7)+"…"+KEY.slice(-4)+")":"未設定"}</small></div><button class="btn ghost" data-act="rekey" style="padding:8px 12px;font-size:13px">変更</button></div>
+    <div class="row2"><div>☁ 同期<small>${syncOn()?"已連線":"手機⇄電腦共用資料"}</small></div><button class="btn ghost" data-act="opensync" style="padding:8px 12px;font-size:13px">${syncOn()?"管理":"設定"}</button></div>
     <div style="display:flex;gap:10px;margin-top:16px"><button class="btn block" data-act="testaudio">🔊 音聲テスト</button><button class="btn ghost block" data-act="closeSheet">閉じる</button></div>
     <div class="row2" style="border:0;margin-top:6px"><div><small>進度重置</small></div><button class="btn ghost" data-act="reset" style="padding:8px 12px;font-size:13px">リセット</button></div>
     <p class="tip" style="margin-bottom:4px">バージョン v${APP_VERSION}（${APP_DATE}）</p><p class="tip">📱 iPhone：請關掉側邊靜音開關，並把音量調大，否則網頁音聲可能沒有聲音。<br>聽不到聲音時，先按「音聲テスト」確認。</p></div>`;
@@ -1486,19 +1487,19 @@ const H={
   spquit(){if(confirm("練習を終わりますか？")){playToken++;stopSrc();if(mr&&mr.state==="recording"){mr.onstop=null;try{mr.stop()}catch(e){}if(mrStream)mrStream.getTracks().forEach(t=>t.stop())}sp=null;renderHome()}},
   train(){startTraining()},
   report(){openReport()},
-  dknow(el){const x=S.wst[el.dataset.w];if(x){x.box=5;x.due=Date.now()+IVL[5]*DAY;save()}toast("了解！もう出題しません 👍");},
+  dknow(el){const x=S.wst[el.dataset.w];if(x){x.box=5;x.due=Date.now()+IVL[5]*DAY;x.t=Date.now();save()}toast("了解！もう出題しません 👍");},
   word(el){openDict("w",el.dataset.w,el.dataset.c||"")},
   sent(el){openDict("s",el.dataset.c,"")},
   dclose(){closeDict()},
   dsave(el){
     S.words=S.words||[];const w=el.dataset.w,i=S.words.findIndex(x=>x.w===w);
     if(i>=0){S.words.splice(i,1);el.textContent="☆ 単語帳に保存"}
-    else{S.words.push({w,reading:el.dataset.r,zh:el.dataset.z,jlpt:el.dataset.l});el.textContent="★ 保存済み"}
+    else{S.words.push({w,reading:el.dataset.r,zh:el.dataset.z,jlpt:el.dataset.l,t:Date.now()});el.textContent="★ 保存済み"}
     save();
   },
   words(){openWordList()},
   wopen(el){openDict("w",el.dataset.w,"")},
-  wdel(el){S.words.splice(+el.dataset.i,1);save();openWordList()},
+  wdel(el){const d=S.words.splice(+el.dataset.i,1)[0];if(d){S.wtomb=S.wtomb||{};S.wtomb[d.w]=Date.now()}save();openWordList()},
   say(el){kick();const my=++playToken;stopSrc();playParts([{v:"F",t:el.dataset.t,gap:0}],curLv,my).catch(e=>toast(e.message==="NEEDGESTURE"?"もう一度タップしてください":e.message,4000))},
   start(){const v=$("#keyin").value.trim();if(!v.startsWith("sk-")){toast("OpenAI Key は sk- で始まります");return}KEY=v;LS.set("jq_key",KEY);touchDay();kick();renderHome()},
   lv(el){curLv=el.dataset.lv;LS.set("jq_lv",curLv);renderHome()},
@@ -1508,6 +1509,10 @@ const H={
   closeSheet(){closeSheet()},
   set(el){const k=el.dataset.k;let v=el.dataset.v;if(v==="true")v=true;else if(v==="false")v=false;S.set[k]=v;save();closeSheet();openSheet()},
   rekey(){closeSheet();renderSetup()},
+  opensync(){openSync()},
+  sygen(){$("#sy_code").value=genCode()},
+  async sysave(){SYNC.url=$("#sy_url").value.trim();SYNC.code=$("#sy_code").value.trim().toUpperCase();if(!/^https?:\/\//.test(SYNC.url)||normCode(SYNC.code).length<12){toast("URL 同コード（12字以上）要填好");return}SYNC.err="";SYNC.pushed="";syncSave();const ok=await syncNow(true);if(ok){closeSheet();openSync()}},
+  syoff(){if(confirm("連線を解除しますか？（本機のデータは残ります）")){SYNC={url:"",code:"",last:0,err:"",pushed:""};syncSave();openSync()}},
   async testaudio(){
     kick();toast("音聲を生成しています…",6000);const my=++playToken;
     try{await playParts([{v:"F",t:"こんにちは。聴解クエストへようこそ。",gap:0.5},{v:"M",t:"音聲は聞こえますか。",gap:0.3}],"N3",my);toast("🔊 テスト完了。聞こえましたか？")}
@@ -1529,8 +1534,99 @@ const H={
 };
 document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)return;const f=H[el.dataset.act];if(f)f(el,e)});
 
+/* ---------- ☁ クラウド同期 (Cloudflare Worker + KV) ---------- */
+var SYNC=LS.get("jq_sync",{url:"",code:"",last:0,err:"",pushed:""});
+var syncBusy=false,syncTimer=null;
+const SYNC_KEYS=["xp","stars","wrong","answered","correct","streakDays","lastDay","words","wtomb","wst","tstat","sp","sstat"];
+function syncOn(){return !!(SYNC.url&&SYNC.code)}
+function normCode(c){return String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function genCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",b=new Uint8Array(20);crypto.getRandomValues(b);let s="";for(let i=0;i<20;i++){s+=a[b[i]%a.length];if(i%4===3&&i<19)s+="-"}return s}
+async function syncKey(){const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("jlpt-quest:"+normCode(SYNC.code)));return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,"0")).join("")}
+function snapshot(){const o={};SYNC_KEYS.forEach(k=>{if(S[k]!==undefined)o[k]=S[k]});return o}
+function syncSave(){LS.set("jq_sync",SYNC)}
+function mergeState(L,R){
+  /* L = 本機 state(S)、R = 遠端 data。回傳合併後的新 data（不改動 L） */
+  R=R||{};const o=JSON.parse(JSON.stringify(snapshot()));
+  const num=k=>{o[k]=Math.max(+L[k]||0,+R[k]||0)};
+  ["xp","answered","correct"].forEach(num);
+  /* 星 */
+  o.stars=Object.assign({},R.stars||{});Object.keys(L.stars||{}).forEach(k=>{o.stars[k]=Math.max(L.stars[k]||0,o.stars[k]||0)});
+  /* 連續日 */
+  const ld=L.lastDay||"",rd=R.lastDay||"";
+  if(rd>ld||(rd===ld&&(R.streakDays||0)>(L.streakDays||0))){o.lastDay=rd;o.streakDays=R.streakDays||0}else{o.lastDay=ld;o.streakDays=L.streakDays||0}
+  /* 單語帳：墓碑 + t */
+  const tomb=Object.assign({},R.wtomb||{});Object.keys(L.wtomb||{}).forEach(w=>{tomb[w]=Math.max(tomb[w]||0,L.wtomb[w])});
+  const wm={};(R.words||[]).concat(L.words||[]).forEach(x=>{const p=wm[x.w];if(!p||(x.t||0)>(p.t||0))wm[x.w]=x});
+  o.words=Object.values(wm).filter(x=>!(tomb[x.w]&&tomb[x.w]>=(x.t||0)));
+  Object.keys(tomb).forEach(w=>{if(Date.now()-tomb[w]>90*864e5)delete tomb[w]});o.wtomb=tomb;
+  /* 間隔反復 */
+  const ws=Object.assign({},R.wst||{});Object.keys(L.wst||{}).forEach(w=>{const a=L.wst[w],b=ws[w];if(!b||(a.t||0)>=(b.t||0))ws[w]=a});o.wst=ws;
+  /* 題型成績：取試行數較多者 */
+  const pick=(a,b,f)=>{const m=Object.assign({},b||{});Object.keys(a||{}).forEach(k=>{if(!m[k]||f(a[k])>=f(m[k]))m[k]=a[k]});return m};
+  o.tstat=pick(L.tstat,R.tstat,v=>v.n||0);o.sstat=pick(L.sstat,R.sstat,v=>v.n||0);o.sp=pick(L.sp,R.sp,v=>(v.tries||0)*1000+(v.best||0));
+  /* 錯題：聯集（已答對的後面會在各端清掉，這裡取聯集即可） */
+  o.wrong=Array.from(new Set((L.wrong||[]).concat(R.wrong||[])));
+  /* 若某題在任一端已拿到星，仍保留於 wrong 無妨；回到練習時答對就會移除 */
+  return o;
+}
+async function syncReq(method,body){
+  const r=await fetch(SYNC.url.replace(/\/+$/,"")+"/sync",{method,headers:{"X-Sync-Key":await syncKey(),"Content-Type":"application/json"},body});
+  if(r.status===401)throw new Error("コードが無効です");
+  if(!r.ok)throw new Error("サーバーエラー "+r.status);
+  return r.json();
+}
+async function syncNow(manual){
+  if(!syncOn()||syncBusy)return false;
+  syncBusy=true;
+  try{
+    const remote=await syncReq("GET");
+    const rd=remote&&remote.data?remote.data:{};
+    const merged=mergeState(S,rd);
+    const before=JSON.stringify(snapshot());
+    Object.assign(S,merged);
+    const changedLocal=JSON.stringify(snapshot())!==before;
+    LS.set("jq_state",S);
+    const now=JSON.stringify(snapshot());
+    if(now!==SYNC.pushed||JSON.stringify(rd)!==now){
+      await syncReq("PUT",JSON.stringify({t:Date.now(),data:snapshot()}));
+      SYNC.pushed=now;
+    }
+    SYNC.last=Date.now();SYNC.err="";syncSave();
+    if(changedLocal&&!$("#sheet")&&app.querySelector('[data-act="review"]'))renderHome();
+    if(manual)toast("☁ 同期しました");
+    return true;
+  }catch(e){
+    SYNC.err=/Failed to fetch|NetworkError|Load failed/i.test(e.message)?"接続できません（URLを確認）":e.message;syncSave();
+    if(manual)toast("☁ "+SYNC.err,4000);
+    return false;
+  }finally{syncBusy=false;const s=$("#syncbox");if(s)s.innerHTML=syncBoxHtml()}
+}
+function syncSoon(){if(!syncOn())return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(false),8000)}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncNow(false);else if(syncOn()){clearTimeout(syncTimer);syncNow(false)}});
+function syncBoxHtml(){
+  const when=SYNC.last?new Date(SYNC.last).toLocaleString():"まだ";
+  if(!syncOn())return `<p class="tip">還未連線。</p>`;
+  return `<p class="tip">コード：<b style="letter-spacing:1px">${esc(SYNC.code)}</b><br>最後同期：${esc(when)}${SYNC.err?`<br><span style="color:#d33">⚠ ${esc(SYNC.err)}</span>`:""}</p>`;
+}
+function openSync(){
+  closeSheet();
+  const el=document.createElement("div");el.className="sheet";el.id="sheet";
+  el.innerHTML=`<div class="in"><h3>☁ 同期（手機⇄電腦）</h3>
+    <p class="tip">把單語帳、星、XP、弱點記錄同步到你自己的 Cloudflare。兩部機輸入同一個 URL 同同期コード即可。OpenAI Key 不會被同步。</p>
+    <label class="tip">Worker URL</label><input id="sy_url" type="url" placeholder="https://jlpt-sync.xxxx.workers.dev" value="${esc(SYNC.url)}" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-bottom:8px">
+    <label class="tip">同期コード</label><input id="sy_code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" value="${esc(SYNC.code)}" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;letter-spacing:1px">
+    <div style="display:flex;gap:8px;margin:10px 0"><button class="btn ghost block" data-act="sygen">🎲 新しいコードを作る</button></div>
+    <div id="syncbox">${syncBoxHtml()}</div>
+    <div style="display:flex;gap:10px;margin-top:12px"><button class="btn block" data-act="sysave">保存して同期</button><button class="btn ghost block" data-act="closeSheet">閉じる</button></div>
+    ${syncOn()?`<div style="margin-top:10px"><button class="btn ghost" data-act="syoff" style="padding:8px 12px;font-size:13px">連線を解除</button></div>`:""}
+    <p class="tip" style="margin-top:8px">第一部機：按「新しいコードを作る」→ 抄低個コード。第二部機：輸入同一個 URL + コード。</p></div>`;
+  el.addEventListener("click",e=>{if(e.target===el)closeSheet()});
+  document.body.appendChild(el);
+}
+
 /* ---------- 起動 ---------- */
 if(KEY){touchDay();renderHome()}else renderSetup();
+syncNow(false);
 </script>
 </body>
 </html>
