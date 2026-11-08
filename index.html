@@ -715,7 +715,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
 
 /* ---------- 狀態 ---------- */
-const APP_VERSION="2.5.2",APP_DATE="2026-11-08";
+const APP_VERSION="2.5.3",APP_DATE="2026-11-08";
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
 const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wtomb:{},wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
@@ -737,7 +737,7 @@ const SILENT="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQAC
 function actx(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;ctx=new C()}return ctx}
 function kick(){ // 必須在使用者點擊的同一個事件裡呼叫（解除 Safari / iOS 的自動播放限制）
   try{const c=actx();if(c.state==="suspended")c.resume()}catch(e){}
-  try{if(!AEL)AEL=new Audio();AEL.src=SILENT;AEL.play().catch(()=>{})}catch(e){}
+  try{const a=new Audio(SILENT);a.play().catch(()=>{})}catch(e){}
 }
 var AEL=null;
 function playEl(ab){return new Promise((res,rej)=>{try{if(!AEL)AEL=new Audio();const u=URL.createObjectURL(new Blob([ab],{type:"audio/mpeg"}));AEL.onended=()=>{URL.revokeObjectURL(u);res()};AEL.onerror=()=>rej(new Error("再生できません"));AEL.src=u;const p=AEL.play();if(p&&p.catch)p.catch(rej)}catch(e){rej(e)}})}
@@ -1504,7 +1504,7 @@ const H={
   words(){openWordList()},
   wopen(el){openDict("w",el.dataset.w,"")},
   wdel(el){const d=S.words.splice(+el.dataset.i,1)[0];if(d){S.wtomb=S.wtomb||{};S.wtomb[d.w]=Date.now()}save();openWordList()},
-  async say(el){kick();const my=++playToken;stopSrc();const t=el.dataset.t,old=el.textContent;el.textContent="⏳";
+  async say(el){kick();try{if(!AEL)AEL=new Audio();AEL.onended=null;AEL.src=SILENT;AEL.play().catch(()=>{})}catch(e){}const my=++playToken;stopSrc();const t=el.dataset.t,old=el.textContent;el.textContent="⏳";
     try{const ab=await ttsRequest(t,"F","N3");if(my!==playToken)return;try{await playEl(ab)}catch(e1){await playParts([{v:"F",t,gap:0}],"N3",my)}}
     catch(e){toast(e.message==="NEEDGESTURE"?"もう一度タップしてください":e.message,4000)}
     finally{el.textContent=old}},
