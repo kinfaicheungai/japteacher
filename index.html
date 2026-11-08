@@ -715,7 +715,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
 
 /* ---------- 狀態 ---------- */
-const APP_VERSION="2.5.0",APP_DATE="2026-11-08";
+const APP_VERSION="2.5.1",APP_DATE="2026-11-08";
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
 const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wtomb:{},wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
@@ -737,8 +737,10 @@ const SILENT="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQAC
 function actx(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;ctx=new C()}return ctx}
 function kick(){ // 必須在使用者點擊的同一個事件裡呼叫（解除 Safari / iOS 的自動播放限制）
   try{const c=actx();if(c.state==="suspended")c.resume()}catch(e){}
-  try{const a=new Audio(SILENT);a.play().catch(()=>{})}catch(e){}
+  try{if(!AEL)AEL=new Audio();AEL.src=SILENT;AEL.play().catch(()=>{})}catch(e){}
 }
+var AEL=null;
+function playEl(ab){return new Promise((res,rej)=>{try{if(!AEL)AEL=new Audio();const u=URL.createObjectURL(new Blob([ab],{type:"audio/mpeg"}));AEL.onended=()=>{URL.revokeObjectURL(u);res()};AEL.onerror=()=>rej(new Error("再生できません"));AEL.src=u;const p=AEL.play();if(p&&p.catch)p.catch(rej)}catch(e){rej(e)}})}
 async function ensureRunning(){const c=actx();if(c.state!=="running"){try{await Promise.race([c.resume(),sleep(500)])}catch(e){}}return c.state==="running"}
 function stopSrc(){active.forEach(s=>{try{s.stop()}catch(e){}});active=[]}
 
@@ -1052,7 +1054,7 @@ function tapWrap(t,minc){
   }
   return o;
 }
-const DICT=LS.get("jq_dict",{});
+const DICT=LS.get("jq_dict",{});var LASTW={};
 function dictSave(){const k=Object.keys(DICT);if(k.length>300)k.slice(0,k.length-300).forEach(x=>delete DICT[x]);LS.set("jq_dict",DICT)}
 const DSYS="あなたは、日本語を勉強している広東語話者（繁體中文で読む）のための日本語辞書です。説明は繁體中文、例文は自然で現代的な日本語にしてください。JSONのみを返します。";
 function dPrompt(mode,text,ctx){
@@ -1062,6 +1064,7 @@ function dPrompt(mode,text,ctx){
 async function askDict(mode,text,ctx){
   const key=mode+"|"+text+"|"+(mode==="w"?(ctx||"").slice(0,60):"");
   if(DICT[key])return DICT[key];
+  if(mode==="w"){const sv=(S.words||[]).find(x=>x.d&&(x.w===text||x.d.word===text));if(sv)return sv.d}
   if(!KEY)throw new Error("OpenAI Key が未設定です");
   const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+KEY},
     body:JSON.stringify({model:"gpt-4o-mini",temperature:0.2,response_format:{type:"json_object"},messages:[{role:"system",content:DSYS},{role:"user",content:dPrompt(mode,text,ctx)}]})});
@@ -1110,7 +1113,7 @@ async function openDict(mode,text,ctx){
   try{
     const d=await askDict(mode,text,ctx);
     const el=$("#dict");if(!el)return;
-    if(mode==="w")wsNote(d.word,d.reading,d.zh,ctx);
+    if(mode==="w"){LASTW[d.word]=d;wsNote(d.word,d.reading,d.zh,ctx);const sv=(S.words||[]).find(x=>x.w===d.word);if(sv&&!sv.d){sv.d=d;sv.t=Date.now();save()}}
     el.querySelector(".in").innerHTML=mode==="w"?wordCard(d):sentCard(d,text);
   }catch(e){
     const el=$("#dict");if(!el)return;
@@ -1119,7 +1122,7 @@ async function openDict(mode,text,ctx){
 }
 function openWordList(){
   const ws=S.words||[];
-  dictShell(`<h3>📖 単語帳 (${ws.length})</h3>`+(ws.length?ws.map((x,i)=>`<div class="wrow"><div class="t" data-act="wopen" data-w="${esc(x.w)}"><b>${esc(x.w)}</b> <small style="display:inline">${esc(x.reading||"")}　${esc(x.jlpt||"")}　${strength(x.w)}</small><small>${esc(x.zh||"")}</small></div><button class="sb" data-act="wdel" data-i="${i}">削除</button></div>`).join(""):`<div class="load">まだありません。<br>答えたあと、文の中の単語をタップして「☆ 単語帳に保存」できます。</div>`)+`<div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`);
+  dictShell(`<h3>📖 単語帳 (${ws.length})</h3>`+(ws.length?ws.map((x,i)=>`<div class="wrow"><div class="t" data-act="wopen" data-w="${esc(x.w)}"><b>${esc(x.w)}</b> <small style="display:inline">${esc(x.reading||"")}　${esc(x.jlpt||"")}　${strength(x.w)}</small><small>${esc(x.zh||"")}</small></div>${sayBtn(x.w)}<button class="sb" data-act="wdel" data-i="${i}">削除</button></div>`).join(""):`<div class="load">まだありません。<br>答えたあと、文の中の単語をタップして「☆ 単語帳に保存」できます。</div>`)+`<div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`);
 }
 
 /* ---------- 先生（個人化トレーニング）---------- */
@@ -1494,13 +1497,16 @@ const H={
   dsave(el){
     S.words=S.words||[];const w=el.dataset.w,i=S.words.findIndex(x=>x.w===w);
     if(i>=0){S.words.splice(i,1);el.textContent="☆ 単語帳に保存"}
-    else{S.words.push({w,reading:el.dataset.r,zh:el.dataset.z,jlpt:el.dataset.l,t:Date.now()});el.textContent="★ 保存済み"}
+    else{S.words.push({w,reading:el.dataset.r,zh:el.dataset.z,jlpt:el.dataset.l,d:LASTW[w]||null,t:Date.now()});el.textContent="★ 保存済み"}
     save();
   },
   words(){openWordList()},
   wopen(el){openDict("w",el.dataset.w,"")},
   wdel(el){const d=S.words.splice(+el.dataset.i,1)[0];if(d){S.wtomb=S.wtomb||{};S.wtomb[d.w]=Date.now()}save();openWordList()},
-  say(el){kick();const my=++playToken;stopSrc();playParts([{v:"F",t:el.dataset.t,gap:0}],curLv,my).catch(e=>toast(e.message==="NEEDGESTURE"?"もう一度タップしてください":e.message,4000))},
+  async say(el){kick();const my=++playToken;stopSrc();const t=el.dataset.t,old=el.textContent;el.textContent="⏳";
+    try{const ab=await ttsRequest(t,"F",curLv);if(my!==playToken)return;try{await playEl(ab)}catch(e1){await playParts([{v:"F",t,gap:0}],curLv,my)}}
+    catch(e){toast(e.message==="NEEDGESTURE"?"もう一度タップしてください":e.message,4000)}
+    finally{el.textContent=old}},
   start(){const v=$("#keyin").value.trim();if(!v.startsWith("sk-")){toast("OpenAI Key は sk- で始まります");return}KEY=v;LS.set("jq_key",KEY);touchDay();kick();renderHome()},
   lv(el){curLv=el.dataset.lv;LS.set("jq_lv",curLv);renderHome()},
   stage(el){kick();startStage(el.dataset.id)},
