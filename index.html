@@ -763,7 +763,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
 
 /* ---------- 狀態 ---------- */
-const APP_VERSION="2.7.1",APP_DATE="2026-11-08";
+const APP_VERSION="2.8.0",APP_DATE="2026-11-08";
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
 const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wtomb:{},wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
@@ -928,6 +928,7 @@ function renderHome(){
     <div class="rank"><div class="row"><b>${rk.name}</b><small>${rk.next?S.xp+" / "+rk.next+" XP":"MAX"}</small></div><div class="bar"><i style="width:${pct}%"></i></div></div>
     ${coachCard()}
     ${speakCard()}
+    ${songCard()}
     <div class="tabs">${Object.keys(LEVELS).map(l=>`<button class="tab ${l===curLv?"on":""}" style="--ac:${LEVELS[l].color}" data-act="lv" data-lv="${l}">${l}</button>`).join("")}</div>
     <div class="world">${art(curLv)}<div class="cap"><h2>${L.title}</h2><small>${L.sub} ・ ★ ${total}/${sts.length*3}</small></div></div>
     <div class="path">${sts.map(s=>{
@@ -1565,6 +1566,22 @@ const H={
   set(el){const k=el.dataset.k;let v=el.dataset.v;if(v==="true")v=true;else if(v==="false")v=false;S.set[k]=v;save();closeSheet();openSheet()},
   rekey(){closeSheet();renderSetup()},
   opensync(){openSync()},
+  songs(){closeDict();renderSongs()},
+  songadd(){openSongAdd()},
+  songopen(el){renderSong(+el.dataset.i)},
+  songtog(el){songView[el.dataset.k]=!songView[el.dataset.k];const i=SONGS.findIndex(x=>x===curSong);renderSong(i<0?0:i)},
+  songdel(el){if(confirm("この曲を削除しますか？")){SONGS.splice(+el.dataset.i,1);songsSave();renderSongs()}},
+  async songgo(){
+    if(songBusy)return;
+    const t=$("#sg_t").value.trim(),a=$("#sg_a").value.trim();
+    const lines=$("#sg_l").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,120);
+    if(!t||lines.length<2){toast("曲名と歌詞（2行以上）を入力してください");return}
+    if(!KEY){toast("OpenAI Key が必要です");return}
+    songBusy=true;const st=$("#sg_st");
+    try{const r=await analyzeSong(lines,(n,m)=>{st.textContent="解析中… "+n+" / "+m+" 行"});
+      SONGS.unshift({id:Date.now(),title:t,artist:a,lines:r.lines,theme:r.theme});songsSave();songBusy=false;closeSheet();renderSongs();toast("✅ 解析できました")}
+    catch(e){songBusy=false;st.textContent="⚠ "+e.message}
+  },
   gallery(){closeSheet();openGallery()},
   sygen(){$("#sy_code").value=genCode()},
   async sysave(){SYNC.url=$("#sy_url").value.trim();SYNC.code=$("#sy_code").value.trim().toUpperCase();if(!/^https?:\/\//.test(SYNC.url)||normCode(SYNC.code).length<12){toast("URL 同コード（12字以上）要填好");return}SYNC.err="";SYNC.pushed="";syncSave();const ok=await syncNow(true);if(ok){closeSheet();openSync()}},
@@ -1596,6 +1613,66 @@ function openGallery(){
   const tn=id=>{const p=id.split("-");const T=TYPES&&TYPES[p[1]];return p[0]+" "+(T?T.jp:p[1])+" 第"+p[2]+"題"};
   dictShell(`<h3>🖼 情景図 (${Object.keys(IMGU).length}枚・${Object.keys(IM).length}題)</h3>`+Object.keys(IMGU).map(k=>`<div style="margin-bottom:14px"><b>${esc(IMNAME[k]||k)}</b><div class="qimg"><img src="${IMGU[k]}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<small>⚠ 載入失敗</small>'"></div><small style="color:var(--mute)">${(g[k]||[]).map(x=>{const id=x.split("（")[0];return esc(tn(id)+x.slice(id.length))}).join("<br>")}</small></div>`).join("")+`<div class="acts"><button class="btn" data-act="dclose">閉じる</button></div>`);
 }
+/* ---------- 🎵 歌で学ぶ（歌詞は利用者が自分で貼り付けたもののみ・端末内に保存） ---------- */
+var SONGS=LS.get("jq_songs",[]);
+var songView={r:true,m:true};
+function songsSave(){LS.set("jq_songs",SONGS)}
+function songCard(){
+  return `<div class="coach" style="border-color:#ff9bd0;background:linear-gradient(135deg,#3b2140,#2a2a55)"><div class="r1"><div><b>🎵 歌で学ぶ</b><small>好きな歌の歌詞を自分で貼り付けると、読み・意味・文法ポイントを付けて、歌えるように練習できます（${SONGS.length}曲）</small></div><button class="btn" data-act="songs" style="padding:8px 14px">開く</button></div></div>`;
+}
+function renderSongs(){
+  app.innerHTML=`<div class="hd"><button class="btn ghost" data-act="home" style="padding:8px 12px">←</button><div class="brand" style="font-size:18px">🎵 歌で学ぶ</div><span></span></div>
+  <div style="padding:6px 4px 90px">
+    ${SONGS.length?SONGS.map((s,i)=>`<button class="stage" data-act="songopen" data-i="${i}"><span class="node">🎵</span><span class="si"><b>${esc(s.title)}</b><small>${esc(s.artist||"")} ・ ${s.lines.length}行${s.theme?" ・ "+esc(s.theme.slice(0,24)):""}</small></span></button>`).join(""):`<p class="tip" style="text-align:center;margin:30px 0">まだ曲がありません。<br>「＋ 新しい歌」から、歌詞を貼り付けてください。</p>`}
+    <button class="btn block" data-act="songadd" style="margin-top:14px">＋ 新しい歌</button>
+    <p class="tip" style="margin-top:14px">⚠ 歌詞は著作物です。このアプリには歌詞は一切入っていません。ご自身で用意した歌詞を、個人の学習目的でのみ貼り付けてください。データはこの端末にだけ保存され、解析のためにOpenAIへ送られます（同期はされません）。</p>
+  </div>`;
+}
+function openSongAdd(){
+  closeSheet();
+  const el=document.createElement("div");el.className="sheet";el.id="sheet";
+  el.innerHTML=`<div class="in"><h3>＋ 新しい歌</h3>
+    <input id="sg_t" placeholder="曲名" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-bottom:8px">
+    <input id="sg_a" placeholder="アーティスト（任意）" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-bottom:8px">
+    <textarea id="sg_l" rows="9" placeholder="歌詞を貼り付け（1行ずつ改行・最大120行）" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:15px"></textarea>
+    <p class="tip">解析には数十秒かかります（10行ずつ処理）。費用はごくわずかです。</p>
+    <div id="sg_st" class="tip"></div>
+    <div style="display:flex;gap:10px;margin-top:10px"><button class="btn block" data-act="songgo">解析する</button><button class="btn ghost block" data-act="closeSheet">閉じる</button></div></div>`;
+  el.addEventListener("click",e=>{if(e.target===el&&!songBusy)closeSheet()});
+  document.body.appendChild(el);
+}
+var songBusy=false;
+const SONGSYS="あなたは日本語学習者（広東語話者、繁體中文で読む）のための歌詞学習アシスタントです。与えられた各行について、正確な読み（ひらがな）、自然な中文訳、重要語を返します。歌詞を創作したり改変したりしません。JSONのみ返します。";
+async function analyzeSong(lines,onProg){
+  const out=[];let theme="";
+  for(let s=0;s<lines.length;s+=10){
+    const part=lines.slice(s,s+10);
+    const usr=`次の歌詞の各行を解析してください（学習者のレベル: ${curLv}）。\n行:\n${part.map((l,i)=>(i+1)+". "+l).join("\n")}\n\nJSON形式:\n{"lines":[{"n":1,"kana":"この行全体のひらがな読み（歌の発音どおり。助詞「は」「へ」は実際の発音ではなく表記どおりひらがなで）","zh":"自然な中文訳","words":[{"w":"重要語","r":"読み","m":"中文の意味"}],"tip":"歌うときの注意（連音・難しい読み・文法など、あれば。なければ空文字）"}]${s===0?`,"theme":"この歌の主題を、自分の言葉で中文20字以内で（歌詞を引用しない）"`:""}}\n・lines は入力と同じ順番・同じ件数。words は1行あたり最大3語、N3以上の語を優先。`;
+    const j=await chatJSON(SONGSYS,usr,0.2);
+    if(s===0&&j.theme)theme=j.theme;
+    part.forEach((l,i)=>{const r=(j.lines||[])[i]||{};out.push({ja:l,kana:r.kana||"",zh:r.zh||"",words:(r.words||[]).slice(0,3),tip:r.tip||""})});
+    onProg(Math.min(s+10,lines.length),lines.length);
+  }
+  return {lines:out,theme};
+}
+var curSong=null;
+function renderSong(i){
+  const sg=SONGS[i];curSong=sg;if(!sg){renderSongs();return}
+  app.innerHTML=`<div class="hd"><button class="btn ghost" data-act="songs" style="padding:8px 12px">←</button><div class="brand" style="font-size:16px">${esc(sg.title)}<small class="ver">${esc(sg.artist||"")}</small></div><span></span></div>
+  <div style="padding:6px 6px 90px">
+    ${sg.theme?`<p class="tip">テーマ：${esc(sg.theme)}</p>`:""}
+    <div style="display:flex;gap:8px;margin:8px 0 12px"><button class="btn ${songView.r?"":"ghost"}" data-act="songtog" data-k="r" style="padding:8px 12px;font-size:13px">読み</button><button class="btn ${songView.m?"":"ghost"}" data-act="songtog" data-k="m" style="padding:8px 12px;font-size:13px">意味</button><button class="btn ghost" data-act="songdel" data-i="${i}" style="padding:8px 12px;font-size:13px;margin-left:auto">🗑</button></div>
+    ${sg.lines.map(l=>`<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,.2)">
+      <div style="font-size:18px;line-height:1.7">${tapWrap(l.ja)}${sayBtn(l.ja)}</div>
+      ${songView.r&&l.kana?`<div style="color:var(--mute);font-size:14px">${esc(l.kana)}</div>`:""}
+      ${songView.m&&l.zh?`<div style="font-size:14px">${esc(l.zh)}</div>`:""}
+      ${songView.m&&l.words&&l.words.length?`<div style="font-size:12.5px;color:var(--mute);margin-top:2px">${l.words.map(w=>esc(w.w)+"（"+esc(w.r||"")+"）"+esc(w.m||"")).join(" ・ ")}</div>`:""}
+      ${l.tip?`<div style="font-size:12.5px;margin-top:2px">🎤 ${esc(l.tip)}</div>`:""}
+    </div>`).join("")}
+  </div>`;
+  window.scrollTo(0,0);
+}
+
 /* ---------- ☁ クラウド同期 (Cloudflare Worker + KV) ---------- */
 var SYNC=LS.get("jq_sync",{url:"",code:"",last:0,err:"",pushed:""});
 var syncBusy=false,syncTimer=null;
