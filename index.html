@@ -763,7 +763,7 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 function toast(m,ms=2600){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),ms)}
 
 /* ---------- 狀態 ---------- */
-const APP_VERSION="2.8.0",APP_DATE="2026-11-08";
+const APP_VERSION="2.8.1",APP_DATE="2026-11-08";
 const DEF_SET={mode:"practice",slow:false,auto:true,ttsPref:"auto"};
 const fresh=()=>({xp:0,stars:{},wrong:[],answered:0,correct:0,streakDays:0,lastDay:"",words:[],wtomb:{},wst:{},tstat:{},set:Object.assign({},DEF_SET)});
 let S=Object.assign(fresh(),LS.get("jq_state",{}));
@@ -786,11 +786,13 @@ function actx(){if(!ctx){const C=window.AudioContext||window.webkitAudioContext;
 function kick(){ // 必須在使用者點擊的同一個事件裡呼叫（解除 Safari / iOS 的自動播放限制）
   try{const c=actx();if(c.state==="suspended")c.resume()}catch(e){}
   try{const a=new Audio(SILENT);a.play().catch(()=>{})}catch(e){}
+  try{if(!QEL){QEL=new Audio();QEL.preload="auto"}if(QEL.paused){QEL.src=SILENT;QEL.play().catch(()=>{})}}catch(e){}
 }
+var QEL=null;
 var AEL=null;
 function playEl(ab){return new Promise((res,rej)=>{try{if(!AEL)AEL=new Audio();const u=URL.createObjectURL(new Blob([ab],{type:"audio/mpeg"}));AEL.onended=()=>{URL.revokeObjectURL(u);res()};AEL.onerror=()=>rej(new Error("再生できません"));AEL.src=u;const p=AEL.play();if(p&&p.catch)p.catch(rej)}catch(e){rej(e)}})}
 async function ensureRunning(){const c=actx();if(c.state!=="running"){try{await Promise.race([c.resume(),sleep(500)])}catch(e){}}return c.state==="running"}
-function stopSrc(){active.forEach(s=>{try{s.stop()}catch(e){}});active=[]}
+function stopSrc(){active.forEach(s=>{try{s.stop()}catch(e){}});active=[];try{if(QEL&&!QEL.paused)QEL.pause()}catch(e){}}
 
 const mem=new Map();let dbp=null;
 function idb(){if(dbp)return dbp;dbp=new Promise(res=>{try{if(!window.indexedDB)return res(null);const r=indexedDB.open("jq-audio",1);r.onupgradeneeded=()=>r.result.createObjectStore("a");r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});return dbp}
@@ -850,7 +852,35 @@ function buildParts(q){
   else if(q.type==="integ"){if(q.intro)push("N",q.intro,0.8);lines(1.5);push("N",q.ask,0.3)}
   return P;
 }
+function playOnceEl(ab,my,onBegin){return new Promise((res,rej)=>{
+  let u=null,done=false,iv=null;
+  const fin=(err)=>{if(done)return;done=true;clearInterval(iv);QEL.onended=null;QEL.onerror=null;try{URL.revokeObjectURL(u)}catch(e){}err?rej(err):res()};
+  try{u=URL.createObjectURL(new Blob([ab],{type:"audio/mpeg"}));
+    QEL.onended=()=>fin();QEL.onerror=()=>fin(new Error("EL_ERR"));
+    iv=setInterval(()=>{if(my!==playToken){try{QEL.pause()}catch(e){}fin()}},100);
+    QEL.src=u;const p=QEL.play();if(p&&p.then)p.then(()=>{onBegin&&onBegin()},e=>fin(e));else onBegin&&onBegin()}catch(e){fin(e)}
+})}
+async function playPartsEl(parts,lv,my,onStart){
+  if(!QEL)throw new Error("EL_NONE");
+  const abs=await pool(parts,4,p=>ttsRequest(p.t,p.v,lv));
+  if(my!==playToken)return false;
+  let started=false;
+  try{
+    for(let i=0;i<parts.length;i++){
+      if(my!==playToken)return false;
+      await playOnceEl(abs[i],my,()=>{if(!started){started=true;onStart&&onStart()}});
+      if(my!==playToken)return false;
+      if(i<parts.length-1){const t0=Date.now();while(my===playToken&&Date.now()-t0<parts[i].gap*1000)await sleep(80)}
+    }
+  }catch(e){if(started)throw new Error("再生が中断されました");throw e}
+  return my===playToken;
+}
 async function playParts(parts,lv,my,onStart){
+  try{const r=await playPartsEl(parts,lv,my,onStart);return r}
+  catch(e){if(my!==playToken)return false;if(/TTS|OpenAI|ネットワーク|餘額|Key/.test(e.message))throw e;if(e.message==="再生が中断されました")throw e}
+  return playPartsWA(parts,lv,my,onStart);
+}
+async function playPartsWA(parts,lv,my,onStart){
   const ok=await ensureRunning();
   if(!ok)throw new Error("NEEDGESTURE");
   const bufs=await pool(parts,4,p=>getBuf(p,lv));
@@ -985,7 +1015,7 @@ function renderQuiz(){
   if(S.set.auto)playQ(qi);
   const nx=run.qs[run.i+1];
   if(nx){const m=IM[nx.id];if(m&&IMGU[m.k]){const pi=new Image();pi.src=IMGU[m.k]}}
-  if(nx&&KEY)pool(nx.parts,3,p=>getBuf(p,run.lv).catch(()=>{})).catch(()=>{});
+  if(nx&&KEY)pool(nx.parts,3,p=>ttsRequest(p.t,p.v,run.lv).catch(()=>{})).catch(()=>{});
 }
 function setAudio(st,msg){
   audioState=st;
@@ -998,7 +1028,7 @@ function setAudio(st,msg){
   else if(st==="loading"){b.textContent="⏳ 音聲を準備中…";b.disabled=true;a.textContent="初回は音聲生成に数秒かかります"}
   else if(st==="playing"){b.textContent="■ 停止";a.textContent="再生中…"}
   else if(st==="done"){a.textContent="聞き終わりました。答えを選んでください";if(exam&&!run.locked){b.textContent="🔒 本番は一度だけ";b.disabled=true}else b.textContent="↻ もう一度聞く"}
-  else if(st==="gesture"){b.textContent="▶ タップして再生";a.textContent="ブラウザの制限のため、タップで再生してください"}
+  else if(st==="gesture"){b.textContent="▶ タップして再生";a.textContent="ブラウザの制限のため、タップで再生してください ["+(ctx?ctx.state:"-")+"]"}
   else if(st==="error"){b.textContent="▶ もう一度";a.textContent=msg||"エラー"}
 }
 async function playQ(qi){
